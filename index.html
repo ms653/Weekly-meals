@@ -6,6 +6,7 @@
 <title>This Week's Kitchen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{
     --paper:#F6F1E7; --card:#FFFDF8; --ink:#2B2A26; --ink-soft:#6B6459;
@@ -97,6 +98,27 @@
   .cluster-box p{margin:0 0 10px;color:var(--ink-soft);font-size:14px;}
   .cluster-box .tag-row{margin-top:0;}
   .bank-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(190px,1fr));gap:12px;margin-top:20px;}
+
+  .bank-actions{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px,1fr));gap:12px;margin-bottom:24px;}
+  .action-tile{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s ease, transform .15s ease;}
+  .action-tile:hover{border-color:var(--rust);transform:translateY(-1px);}
+  .action-tile-title{font-family:'Fraunces', serif;font-weight:600;font-size:16px;margin-bottom:4px;}
+  .action-tile-sub{font-size:13px;color:var(--ink-soft);line-height:1.4;}
+
+  .recipe-form label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin:16px 0 6px;}
+  .recipe-form label:first-of-type{margin-top:0;}
+  .recipe-form input[type=text], .recipe-form select, .recipe-form textarea{
+    width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Public Sans', sans-serif;font-size:15px;background:#fff;color:var(--ink);
+  }
+  .recipe-form textarea{min-height:90px;resize:vertical;font-family:'Public Sans', sans-serif;}
+  .recipe-form .tag-choices{display:flex;flex-wrap:wrap;gap:14px;}
+  .recipe-form .tag-choices label{display:flex;align-items:center;gap:6px;font-size:14px;text-transform:none;letter-spacing:normal;font-weight:500;color:var(--ink);margin:0;}
+  .recipe-form .ocr-status{font-size:13px;color:var(--ink-soft);margin-top:6px;min-height:1.2em;}
+  .recipe-form .form-actions{display:flex;gap:10px;margin-top:22px;}
+  .recipe-form .form-actions button{border:none;border-radius:8px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer;}
+  .recipe-form .save-btn{background:var(--ink);color:var(--paper);}
+  .recipe-form .save-btn:hover{opacity:0.88;}
+  .recipe-form .cancel-btn{background:none;border:1px solid var(--line) !important;color:var(--ink-soft);}
 </style>
 </head>
 <body>
@@ -170,6 +192,17 @@
   <!-- MEAL BANK -->
   <section class="panel" id="panel-bank">
     <p class="subtitle" style="margin-bottom:20px;">Every meal that's ever gone into a week's plan lives here. Meals in the same cluster share a batch-cook step — pull from here when you're planning the next week.</p>
+    <div class="bank-actions">
+      <div class="action-tile" id="add-recipe-btn">
+        <div class="action-tile-title">+ Add a recipe</div>
+        <div class="action-tile-sub">Type it in, or attach a photo and let it scan the text in for you</div>
+      </div>
+      <div class="action-tile" id="send-photo-btn">
+        <div class="action-tile-title">📷 Send a photo for the weekly review</div>
+        <div class="action-tile-sub">Too busy to type it up? Send a cookbook photo or screenshot — Claude checks these once a week and adds the recipe for you</div>
+      </div>
+    </div>
+    <input type="file" id="photo-inbox-input" accept="image/*" style="display:none">
     <div id="clusters"></div>
     <div class="section-label">All meals</div>
     <div class="bank-grid" id="bank-grid"></div>
@@ -325,13 +358,14 @@ const shoppingLists = {
 
 /* =========================================================================
    SHARED STORAGE
-   The live shopping list (ticks + ad hoc additions) is kept in a small
-   free key/value store at kvdb.io so every device sees the same list,
-   instead of each browser's own local storage. There's no login on this —
-   anyone with the bucket URL below can read/write it, which is a fine
-   trade for a household grocery list. Local storage is still used as a
-   same-device cache so the page has something to show immediately and
-   still works (read-only, from the last sync) if the network is down.
+   Everything live (shopping list ticks/additions, custom recipes, and the
+   photo inbox for the weekly review) is kept in a small free key/value
+   store at kvdb.io so every device sees the same data, instead of each
+   browser's own local storage. There's no login on this — anyone with the
+   bucket URL below can read/write it, which is a fine trade for a
+   household meal planner. Local storage is still used as a same-device
+   cache so the page has something to show immediately and still works
+   (read-only, from the last sync) if the network is down.
    ========================================================================= */
 const KVDB_BUCKET = '6ce9CfkYV8RHp5PnGG4MeT';
 function kvdbUrl(key){ return `https://kvdb.io/${KVDB_BUCKET}/${key}`; }
@@ -349,6 +383,10 @@ async function saveShared(key, data){
   if(!res.ok) throw new Error('save failed: ' + res.status);
 }
 
+async function deleteShared(key){
+  try{ await fetch(kvdbUrl(key), { method:'DELETE' }); }catch(e){ /* best effort - see photo inbox notes */ }
+}
+
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -359,6 +397,8 @@ let shoppingList = null;
 let addingItemCat = null;    // category currently showing its inline "+ Add item" input
 let addingCategory = false;  // whether the "+ Add category" input is open
 let syncTimer = null;
+let customRecipes = {};
+let recipesSyncTimer = null;
 
 function shoppingKey(){ return 'shopping-week-' + currentWeek; }
 function localCacheKey(){ return 'meal-planner-shopping-week-' + currentWeek; }
@@ -435,10 +475,61 @@ function startSyncPolling(){
   }, 8000);
 }
 
-document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden && document.getElementById('panel-shop').classList.contains('active')){
-    refreshFromShared();
+/* ---------------- CUSTOM RECIPES (shared, synced) ---------------- */
+const CUSTOM_RECIPES_KEY = 'recipes-custom';
+const CUSTOM_RECIPES_CACHE_KEY = 'meal-planner-custom-recipes';
+
+function allRecipes(){ return Object.assign({}, mealBank, customRecipes); }
+
+function cacheRecipesLocally(){
+  try{ localStorage.setItem(CUSTOM_RECIPES_CACHE_KEY, JSON.stringify(customRecipes)); }catch(e){ /* storage unavailable */ }
+}
+function readRecipesCache(){
+  try{
+    const stored = localStorage.getItem(CUSTOM_RECIPES_CACHE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }catch(e){ return null; }
+}
+
+async function loadRecipes(){
+  try{
+    const shared = await fetchShared(CUSTOM_RECIPES_KEY);
+    customRecipes = shared || readRecipesCache() || {};
+    cacheRecipesLocally();
+  }catch(e){
+    customRecipes = readRecipesCache() || {};
   }
+}
+
+async function refreshRecipesFromShared(){
+  try{
+    const shared = await fetchShared(CUSTOM_RECIPES_KEY);
+    if(shared && JSON.stringify(shared) !== JSON.stringify(customRecipes)){
+      customRecipes = shared;
+      cacheRecipesLocally();
+      renderBank();
+    }
+  }catch(e){ /* stay on last known state */ }
+}
+
+function persistRecipes(){
+  cacheRecipesLocally();
+  saveShared(CUSTOM_RECIPES_KEY, customRecipes).catch(()=>{ /* will pick back up on next successful poll */ });
+}
+
+function startRecipeSyncPolling(){
+  if(recipesSyncTimer) clearInterval(recipesSyncTimer);
+  recipesSyncTimer = setInterval(()=>{
+    if(document.hidden) return;
+    if(!document.getElementById('panel-bank').classList.contains('active')) return;
+    refreshRecipesFromShared();
+  }, 8000);
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) return;
+  if(document.getElementById('panel-shop').classList.contains('active')) refreshFromShared();
+  if(document.getElementById('panel-bank').classList.contains('active')) refreshRecipesFromShared();
 });
 
 /* ---------------- WEEK PICKER ---------------- */
@@ -462,19 +553,21 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
     if(btn.dataset.tab === 'shop') refreshFromShared();
+    if(btn.dataset.tab === 'bank') refreshRecipesFromShared();
   });
 });
 
 /* ---------------- MEAL PLAN ---------------- */
 function tagPills(tags){
-  return tags.map(t=>`<span class="pill ${tagMeta[t].cls}">${tagMeta[t].label}</span>`).join('');
+  return (tags || []).filter(t=>tagMeta[t]).map(t=>`<span class="pill ${tagMeta[t].cls}">${tagMeta[t].label}</span>`).join('');
 }
 
 function renderSlotCard(day, mealId){
   const meal = mealBank[mealId];
+  if(!meal) return '';
   return `<div class="day-card" data-id="${mealId}">
     <div class="day-name">${day}</div>
-    <div class="meal-name">${meal.name}</div>
+    <div class="meal-name">${escapeHtml(meal.name)}</div>
     <div class="tag-row">${tagPills(meal.tags)}</div>
   </div>`;
 }
@@ -489,17 +582,18 @@ function renderPlan(){
 }
 
 function openRecipe(id){
-  const meal = mealBank[id];
+  const meal = allRecipes()[id];
   if(!meal) return;
+  const esc = meal.custom ? escapeHtml : (s=>s); // built-in recipes use <mark> for emphasis; custom ones are plain typed/scanned text
   const modal = document.getElementById('modal-body');
   modal.innerHTML = `
     <button class="modal-close" id="modal-close-btn">&times;</button>
-    <h2>${meal.name}</h2>
+    <h2>${escapeHtml(meal.name)}</h2>
     <div class="tag-row">${tagPills(meal.tags)}</div>
     <h3>Ingredients</h3>
-    <ul class="ingredients">${meal.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <ul class="ingredients">${meal.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>
     <h3>Method</h3>
-    <ol class="steps">${meal.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    <ol class="steps">${meal.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
   `;
   document.getElementById('overlay').classList.add('open');
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
@@ -618,23 +712,24 @@ document.getElementById('reset-btn').addEventListener('click', ()=>{
 
 /* ---------------- MEAL BANK ---------------- */
 function renderBank(){
+  const recipes = allRecipes();
   const clusterTags = Object.keys(tagMeta).filter(tag=>
-    Object.values(mealBank).filter(m=>m.tags.includes(tag)).length >= 2
+    Object.values(recipes).filter(m=>(m.tags||[]).includes(tag)).length >= 2
   );
   document.getElementById('clusters').innerHTML = clusterTags.map(tag=>{
     const meta = tagMeta[tag];
-    const members = Object.entries(mealBank).filter(([id,m])=>m.tags.includes(tag));
+    const members = Object.entries(recipes).filter(([id,m])=>(m.tags||[]).includes(tag));
     return `<div class="cluster-box">
       <h3><span class="pill ${meta.cls}">${meta.label}</span> ${meta.clusterName}</h3>
       <p>${meta.clusterNote}</p>
-      <div class="tag-row">${members.map(([id,m])=>`<span class="pill ${meta.cls}" style="cursor:pointer" data-id="${id}">${m.name}</span>`).join('')}</div>
+      <div class="tag-row">${members.map(([id,m])=>`<span class="pill ${meta.cls}" style="cursor:pointer" data-id="${id}">${escapeHtml(m.name)}</span>`).join('')}</div>
     </div>`;
   }).join('') || '<p class="subtitle">Add a second meal with a shared tag to see clusters appear here.</p>';
 
-  document.getElementById('bank-grid').innerHTML = Object.entries(mealBank).map(([id,m])=>`
+  document.getElementById('bank-grid').innerHTML = Object.entries(recipes).map(([id,m])=>`
     <div class="day-card" data-id="${id}">
-      <div class="day-name">${m.slot}</div>
-      <div class="meal-name">${m.name}</div>
+      <div class="day-name">${escapeHtml(m.slot)}${m.custom ? ' · added' : ''}</div>
+      <div class="meal-name">${escapeHtml(m.name)}</div>
       <div class="tag-row">${tagPills(m.tags)}</div>
     </div>
   `).join('');
@@ -644,12 +739,154 @@ function renderBank(){
   });
 }
 
+/* ---------------- ADD A RECIPE (with optional photo OCR) ---------------- */
+document.getElementById('add-recipe-btn').addEventListener('click', openAddRecipeForm);
+
+function openAddRecipeForm(){
+  const modal = document.getElementById('modal-body');
+  modal.innerHTML = `
+    <button class="modal-close" id="modal-close-btn">&times;</button>
+    <h2>Add a recipe</h2>
+    <div class="recipe-form">
+      <label for="rf-photo">Photo (optional — scans the text in for you)</label>
+      <input type="file" id="rf-photo" accept="image/*">
+      <div class="ocr-status" id="rf-ocr-status"></div>
+
+      <label for="rf-name">Name</label>
+      <input type="text" id="rf-name" placeholder="e.g. Sunday Fish Pie">
+
+      <label for="rf-slot">When is it eaten?</label>
+      <select id="rf-slot">
+        <option value="dinner">Dinner</option>
+        <option value="breakfast">Breakfast</option>
+      </select>
+
+      <label>Shares prep with</label>
+      <div class="tag-choices">
+        <label><input type="checkbox" value="sauce"> Meat sauce</label>
+        <label><input type="checkbox" value="mash"> Mash</label>
+        <label><input type="checkbox" value="sausage"> Sausages</label>
+      </div>
+
+      <label for="rf-ingredients">Ingredients (one per line)</label>
+      <textarea id="rf-ingredients" placeholder="Scanned text lands here — tidy it up, and move any method steps down to Steps."></textarea>
+
+      <label for="rf-steps">Steps (one per line)</label>
+      <textarea id="rf-steps"></textarea>
+
+      <div class="form-actions">
+        <button type="button" class="save-btn" id="rf-save">Save recipe</button>
+        <button type="button" class="cancel-btn" id="rf-cancel">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('rf-cancel').addEventListener('click', closeModal);
+  document.getElementById('rf-photo').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(file) runOcr(file);
+  });
+  document.getElementById('rf-save').addEventListener('click', saveNewRecipe);
+}
+
+async function runOcr(file){
+  const status = document.getElementById('rf-ocr-status');
+  const ingredientsBox = document.getElementById('rf-ingredients');
+  status.textContent = 'Reading photo…';
+  try{
+    const { data:{ text } } = await Tesseract.recognize(file, 'eng');
+    ingredientsBox.value = text.trim();
+    status.textContent = 'Scanned — tidy this up, then move any method steps down to Steps.';
+  }catch(e){
+    status.textContent = "Couldn't read that photo — you can still type the recipe in by hand.";
+  }
+}
+
+function slugify(str){
+  return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'recipe';
+}
+function uniqueCustomId(name){
+  const base = 'custom-' + slugify(name);
+  const recipes = allRecipes();
+  let id = base, n = 2;
+  while(recipes[id]){ id = base + '-' + n; n++; }
+  return id;
+}
+
+function saveNewRecipe(){
+  const nameInput = document.getElementById('rf-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  const slot = document.getElementById('rf-slot').value;
+  const tags = Array.from(document.querySelectorAll('.recipe-form .tag-choices input:checked')).map(cb=>cb.value);
+  const ingredients = document.getElementById('rf-ingredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps = document.getElementById('rf-steps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const id = uniqueCustomId(name);
+  customRecipes[id] = { name, slot, tags, ingredients, steps, custom:true };
+  persistRecipes();
+  closeModal();
+  renderBank();
+}
+
+/* ---------------- SEND A PHOTO FOR THE WEEKLY REVIEW ---------------- */
+document.getElementById('send-photo-btn').addEventListener('click', ()=>{
+  document.getElementById('photo-inbox-input').click();
+});
+
+document.getElementById('photo-inbox-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const subEl = document.querySelector('#send-photo-btn .action-tile-sub');
+  const original = subEl.textContent;
+  subEl.textContent = 'Sending…';
+  try{
+    await sendPhotoForReview(file);
+    subEl.textContent = 'Sent — Claude reviews these weekly and adds the recipe for you.';
+  }catch(err){
+    subEl.textContent = "Couldn't send that photo — check your connection and try again.";
+  }
+  setTimeout(()=>{ subEl.textContent = original; }, 6000);
+});
+
+function downscaleImage(file, maxWidth){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function sendPhotoForReview(file){
+  const dataUrl = await downscaleImage(file, 1000);
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  await saveShared('inbox-photo-' + id, dataUrl);
+  const index = (await fetchShared('inbox-index')) || [];
+  index.push({ id, addedAt: new Date().toISOString() });
+  await saveShared('inbox-index', index);
+}
+
 /* ---------------- INIT ---------------- */
 renderWeekPicker();
 renderPlan();
 loadList().then(renderShopList);
-renderBank();
+loadRecipes().then(renderBank);
 startSyncPolling();
+startRecipeSyncPolling();
 </script>
 </body>
 </html>
