@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>This Week's Kitchen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F1E7; --card:#FFFDF8; --ink:#2B2A26; --ink-soft:#6B6459;
+    --line:rgba(43,42,38,0.14);
+    --sage:#6E8F71; --sage-bg:#E4EBE1;
+    --mustard:#C9922C; --mustard-bg:#F3E6C8;
+    --rust:#B0522F; --rust-bg:#F1DCCC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Public Sans', sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+  h1{font-family:'Fraunces', serif;font-weight:600;font-size:clamp(30px, 6vw, 44px);margin:0 0 6px;letter-spacing:-0.01em;}
+  .subtitle{color:var(--ink-soft);font-size:16px;max-width:60ch;line-height:1.5;margin:0;}
+  .head-row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .week-select{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft);}
+  .week-select select{
+    font-family:'Public Sans', sans-serif;font-size:14px;padding:7px 10px;border-radius:8px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+  }
+  nav.tabs{display:flex;gap:6px;margin:26px 0 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  nav.tabs button{
+    font-family:'Public Sans', sans-serif;font-size:15px;font-weight:600;background:none;border:none;
+    padding:10px 4px 12px;margin-right:22px;color:var(--ink-soft);cursor:pointer;
+    border-bottom:2px solid transparent;transition:color .15s ease, border-color .15s ease;
+  }
+  nav.tabs button.active{color:var(--ink);border-bottom-color:var(--rust);}
+  nav.tabs button:hover{color:var(--ink);}
+  .panel{display:none;} .panel.active{display:block;}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px;font-size:13px;color:var(--ink-soft);}
+  .section-label{font-family:'Fraunces', serif;font-size:20px;font-weight:600;margin:30px 0 14px;}
+  .section-label:first-child{margin-top:0;}
+  .day-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(190px,1fr));gap:12px;}
+  .day-card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;
+    transition:box-shadow .15s ease, transform .15s ease;display:flex;flex-direction:column;gap:8px;min-height:120px;
+  }
+  .day-card:hover{box-shadow:0 4px 14px rgba(43,42,38,0.10);transform:translateY(-1px);}
+  .day-name{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);font-weight:600;}
+  .meal-name{font-family:'Fraunces', serif;font-size:19px;font-weight:600;line-height:1.25;}
+  .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap;}
+  .pill.sauce{background:var(--rust-bg);color:var(--rust);}
+  .pill.mash{background:var(--mustard-bg);color:var(--mustard);}
+  .pill.sausage{background:var(--sage-bg);color:var(--sage);}
+  .lunch-box, .snack-box, .cluster-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .lunch-box ul, .snack-box ul{margin:8px 0 0;padding-left:20px;line-height:1.7;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:520px){.two-col{grid-template-columns:1fr;}}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,18,14,0.45);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border-radius:14px;max-width:560px;width:100%;padding:28px 26px 30px;position:relative;}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:6px;}
+  .modal h2{font-family:'Fraunces', serif;font-size:26px;margin:0 0 4px;padding-right:30px;}
+  .modal .tag-row{margin-bottom:16px;}
+  .modal h3{font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin:20px 0 8px;}
+  .modal ul.ingredients{margin:0;padding-left:18px;line-height:1.8;}
+  .modal ol.steps{margin:0;padding-left:20px;line-height:1.8;}
+  .modal ol.steps li{margin-bottom:6px;}
+  .modal mark{background:none;color:var(--rust);font-weight:700;}
+
+  .add-bar{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:22px;}
+  .add-bar input[type=text]{flex:1;min-width:160px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Public Sans', sans-serif;font-size:14px;background:#fff;}
+  .add-bar select{padding:9px 10px;border-radius:8px;border:1px solid var(--line);font-family:'Public Sans', sans-serif;font-size:14px;background:#fff;}
+  .add-bar button{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:14px;cursor:pointer;}
+  .add-bar button:hover{opacity:0.88;}
+  .cat{margin-bottom:20px;}
+  .cat h3{font-family:'Fraunces', serif;font-weight:600;font-size:17px;margin:0 0 8px;}
+  .cat ul{list-style:none;margin:0;padding:0;}
+  .cat li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:15px;}
+  .cat li:last-child{border-bottom:none;}
+  .cat li.checked span.item-label{color:var(--ink-soft);text-decoration:line-through;}
+  .cat li input[type=checkbox]{width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex-shrink:0;}
+  .cat li .del{margin-left:auto;background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;opacity:0.5;}
+  .cat li .del:hover{opacity:1;color:var(--rust);}
+  .list-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:var(--ink-soft);}
+  .list-footer button{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .list-footer button:hover{border-color:var(--rust);color:var(--rust);}
+
+  .cluster-box{margin-bottom:14px;}
+  .cluster-box h3{font-family:'Fraunces', serif;font-size:17px;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+  .cluster-box p{margin:0 0 10px;color:var(--ink-soft);font-size:14px;}
+  .cluster-box .tag-row{margin-top:0;}
+  .bank-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(190px,1fr));gap:12px;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="head-row">
+      <div>
+        <h1>This Week's Kitchen</h1>
+        <p class="subtitle">One weeknight batch of prep carries several dinners. Tap any meal to see the recipe — shared prep is marked so you always know what to save for later.</p>
+      </div>
+      <div class="week-select">
+        <label for="week-picker">Week:</label>
+        <select id="week-picker"></select>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="plan">Meal Plan</button>
+    <button data-tab="shop">Shopping List</button>
+    <button data-tab="bank">Meal Bank</button>
+  </nav>
+
+  <!-- MEAL PLAN -->
+  <section class="panel active" id="panel-plan">
+    <div class="legend">
+      <span class="pill sauce">Meat sauce</span>
+      <span class="pill mash">Mash</span>
+      <span class="pill sausage">Sausages</span>
+      <span>— shared prep, tap a meal to see how it's used</span>
+    </div>
+    <div class="section-label">Dinners</div>
+    <div class="day-grid" id="dinner-grid"></div>
+    <div class="section-label">Weekend Breakfasts</div>
+    <div class="day-grid" id="breakfast-grid"></div>
+    <div class="section-label">Lunch (for 1–2)</div>
+    <div class="two-col">
+      <div class="lunch-box">
+        <strong>Quick & easy</strong>
+        <ul>
+          <li>Leftover bolognese or chilli in a wrap</li>
+          <li>Cheese & pickle sandwiches</li>
+          <li>Tomato soup + crusty bread</li>
+          <li>Jacket potato with beans/cheese</li>
+        </ul>
+      </div>
+      <div class="snack-box">
+        <strong>Snacks</strong>
+        <ul>
+          <li>Apple or banana + cheese string</li>
+          <li>Hummus with carrot & cucumber sticks</li>
+          <li>Yoghurt pots</li>
+          <li>Rice cakes with peanut butter</li>
+          <li>Plain popcorn</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOPPING LIST -->
+  <section class="panel" id="panel-shop">
+    <p class="subtitle" style="margin-bottom:16px;">Quantities already account for ingredients shared across meals — the note in brackets shows which meal(s) each item covers.</p>
+    <div class="add-bar">
+      <input type="text" id="new-item" placeholder="Add an item…">
+      <select id="new-cat"></select>
+      <button id="add-btn">Add</button>
+    </div>
+    <div id="shop-lists"></div>
+    <div class="list-footer">
+      <button id="reset-btn">Reset to default list</button>
+      <span id="save-note"></span>
+    </div>
+  </section>
+
+  <!-- MEAL BANK -->
+  <section class="panel" id="panel-bank">
+    <p class="subtitle" style="margin-bottom:20px;">Every meal that's ever gone into a week's plan lives here. Meals in the same cluster share a batch-cook step — pull from here when you're planning the next week.</p>
+    <div id="clusters"></div>
+    <div class="section-label">All meals</div>
+    <div class="bank-grid" id="bank-grid"></div>
+  </section>
+
+</div>
+
+<div class="modal-overlay" id="overlay"><div class="modal" id="modal-body"></div></div>
+
+<script>
+/* =========================================================================
+   MEAL BANK
+   Add a new meal here any time you cook something worth reusing.
+   tags: array of shared-prep keys. If a new kind of shared prep shows up
+   (e.g. "roast-veg"), add it to tagMeta below too, with a colour.
+   ========================================================================= */
+const mealBank = {
+  'bolognese':{ name:'Spaghetti Bolognese', slot:'dinner', tags:['sauce'],
+    ingredients:['2 tbsp olive oil','1 large onion, diced','2 garlic cloves, minced','2 carrots, grated','1.5kg beef mince','4 tins chopped tomatoes','2 beef stock cubes (in 300ml water)','1 tbsp mixed herbs','Salt & pepper','Spaghetti, for tonight','Parmesan, to serve (optional)'],
+    steps:['Heat the oil in your biggest pan and soften the onion, garlic and carrot for 5 minutes.','Add all the mince, breaking it up as it browns, for 5–6 minutes.','Stir in the tomatoes, stock and herbs. Simmer uncovered for 25 minutes, stirring now and then. <mark>This is your big-batch meat sauce.</mark>','Split the sauce into three roughly equal batches: keep one out for tonight, and fridge the other two in separate containers for other meals in the sauce cluster.','Cook the spaghetti, toss with tonight\'s portion of sauce, and serve.']
+  },
+  'chicken-traybake':{ name:'Chicken Traybake', slot:'dinner', tags:[],
+    ingredients:['6–8 chicken thighs','4 potatoes, chunked','2 peppers, sliced','1 courgette, sliced','2 tbsp olive oil','1 tsp paprika','Mixed herbs, salt & pepper'],
+    steps:['Preheat the oven to 200°C/400°F.','Toss everything together in a large roasting tray with the oil, paprika and herbs.','Roast for 35–40 minutes, turning once, until the chicken is cooked through and the potatoes are golden.']
+  },
+  'chilli':{ name:'Chilli Con Carne', slot:'dinner', tags:['sauce'],
+    ingredients:['Reserved meat sauce (from the sauce batch)','1 tin kidney beans, drained','1 tsp cumin','1 tsp paprika','Rice, to serve','Soft tortillas (optional)','Grated cheese, to serve'],
+    steps:['Tip a reserved batch of meat sauce into a pan with the kidney beans, cumin and paprika.','Simmer for 10 minutes to heat through and let the spices settle in.','Serve over rice, or spoon into wraps, with a scatter of cheese.']
+  },
+  'sausage-mash':{ name:'Sausage, Mash & Beans', slot:'dinner', tags:['mash','sausage'],
+    ingredients:['Beef sausages (buy a bigger pack — extra for a breakfast later in the week)','1.5kg potatoes','Butter','Splash of milk','Baked beans','Frozen peas'],
+    steps:['Grill or oven-cook the sausages until browned and cooked through. <mark>Set some aside once cooled for a shared breakfast.</mark>','Peel and boil a big batch of potatoes, then mash with butter and milk.','Serve tonight\'s portion with sausages, beans and peas, and <mark>keep the rest of the mash for the next mash-topped meal.</mark>']
+  },
+  'cottage-pie':{ name:'Cottage Pie', slot:'dinner', tags:['sauce','mash'],
+    ingredients:['Reserved meat sauce (from the sauce batch)','Handful of frozen peas','Reserved mash (from the mash batch)','Grated cheese, for the top (optional)'],
+    steps:['Preheat the oven to 190°C/375°F.','Warm the last of the reserved meat sauce in an ovenproof dish and stir through the peas.','Spread the reserved mash over the top and scatter with cheese if using.','Bake for 20–25 minutes until golden on top.']
+  },
+  'pizza-night':{ name:'Build-Your-Own Pizza', slot:'dinner', tags:[],
+    ingredients:['Pizza bases or dough','Passata','Grated cheese','Toppings of choice (peppers, sweetcorn, ham-free pepperoni, mushrooms)'],
+    steps:['Preheat the oven to 220°C/425°F.','Let everyone spread their own passata and cheese, then pick their toppings.','Bake for 10–12 minutes until the cheese is bubbling.']
+  },
+  'roast-chicken':{ name:'Roast Chicken', slot:'dinner', tags:[],
+    ingredients:['Whole chicken','Potatoes, for roasting','Carrots','Seasonal veg','Gravy (granules or homemade)'],
+    steps:['Preheat the oven to 200°C/400°F. Roast the chicken for roughly 20 minutes per 500g, plus 20 minutes.','Parboil and roast the potatoes alongside for the last 45–50 minutes.','Steam the carrots and veg, make the gravy, and carve the chicken to serve.']
+  },
+  'pancakes':{ name:'Fluffy Pancakes', slot:'breakfast', tags:[],
+    ingredients:['200g self-raising flour','2 eggs','300ml milk','1 tbsp sugar','Butter, for the pan','Banana & maple syrup, to serve'],
+    steps:['Whisk the flour, eggs and milk together into a smooth batter.','Cook spoonfuls in a buttered pan for 1–2 minutes each side until golden.','Serve with sliced banana and maple syrup.']
+  },
+  'sausage-eggs':{ name:'Sausage & Eggs', slot:'breakfast', tags:['sausage'],
+    ingredients:['Reserved sausages (from earlier in the week)','Eggs','Baked beans','Toast'],
+    steps:['Warm through the reserved sausages in a pan or oven.','Scramble or fry the eggs alongside, and heat the beans.','Serve with hot buttered toast.']
+  }
+};
+
+const tagMeta = {
+  sauce:{label:'Meat sauce', cls:'sauce', clusterName:'The meat sauce cluster', clusterNote:'Make one big batch, portion it across all of these.'},
+  mash:{label:'Mash', cls:'mash', clusterName:'The mash cluster', clusterNote:'Double a batch of mash and it carries into the next one.'},
+  sausage:{label:'Sausages', cls:'sausage', clusterName:'The sausage cluster', clusterNote:'Buy one bigger pack and split it across these.'}
+};
+
+/* =========================================================================
+   WEEKS
+   Add a new week by adding a new numbered entry here, referencing meal ids
+   from the bank above (add new meals to the bank first if needed).
+   ========================================================================= */
+const weeks = {
+  1:{
+    label:'Week 1',
+    dinners:[
+      {day:'Monday', mealId:'bolognese'},
+      {day:'Tuesday', mealId:'chicken-traybake'},
+      {day:'Wednesday', mealId:'chilli'},
+      {day:'Thursday', mealId:'sausage-mash'},
+      {day:'Friday', mealId:'cottage-pie'},
+      {day:'Saturday', mealId:'pizza-night'},
+      {day:'Sunday', mealId:'roast-chicken'}
+    ],
+    breakfasts:[
+      {day:'Saturday Breakfast', mealId:'pancakes'},
+      {day:'Sunday Breakfast', mealId:'sausage-eggs'}
+    ]
+  }
+};
+
+/* =========================================================================
+   SHOPPING LISTS
+   One list per week number, matching the "weeks" object above.
+   ========================================================================= */
+const shoppingLists = {
+  1:{
+    'Meat':[
+      {t:'Beef mince – 1.5kg (Mon sauce, feeds Mon/Wed/Fri)'},
+      {t:'Chicken thighs – 8 pieces, ~1.3kg (Tue traybake)'},
+      {t:'Whole chicken – 1, approx 1.6kg (Sun roast)'},
+      {t:'Beef sausages – 2 packs, ~12–16 total (Thu dinner + Sun breakfast)'}
+    ],
+    'Fridge':[
+      {t:'Eggs – 1 dozen (Sat pancakes + Sun breakfast)'},
+      {t:'Milk – 2 litres (pancakes, mash x2, tea/cereal)'},
+      {t:'Butter – 250g (mash x2, pancakes, toast)'},
+      {t:'Cheddar cheese – 400g block (chilli, cottage pie, pizza, sandwiches)'},
+      {t:'String cheese – 1 multipack (snacks)'},
+      {t:'Yoghurt pots – 1 multipack (snacks)'},
+      {t:'Soft tortillas – 1 pack of 8 (Wed chilli)'}
+    ],
+    'Fruit & Veg':[
+      {t:'Onions – 3, net bag (Mon sauce, Sun roast)'},
+      {t:'Garlic – 1 bulb (Mon sauce)'},
+      {t:'Carrots – 8, 1 bag (Mon sauce, Sun roast)'},
+      {t:'Potatoes – 3kg, large bag (Tue traybake, Thu/Fri mash, Sun roast)'},
+      {t:'Peppers – 3 (Tue traybake, Sat pizza topping)'},
+      {t:'Courgette – 1 (Tue traybake)'},
+      {t:'Bananas – 1 bunch (Sat pancakes + snacks)'},
+      {t:'Apples – 1 bag of 6 (snacks)'},
+      {t:'Cucumber – 1 (snacks/hummus)'},
+      {t:'Broccoli or greens – 1 head (Sun roast)'},
+      {t:'Mushrooms – 1 punnet, optional (Sat pizza topping)'}
+    ],
+    'Store Cupboard':[
+      {t:'Chopped tomatoes – 4 tins (Mon sauce)'},
+      {t:'Kidney beans – 1 tin (Wed chilli)'},
+      {t:'Beef stock cubes – 2 (Mon sauce)'},
+      {t:'Baked beans – 2 tins (Thu dinner + Sun breakfast)'},
+      {t:'Frozen peas – 500g bag (Thu + Fri)'},
+      {t:'Spaghetti – 500g (Mon)'},
+      {t:'Rice – 300g, from a bigger bag (Wed)'},
+      {t:'Self-raising flour – 1kg bag (Sat pancakes)'},
+      {t:'Cumin – 1 jar (Wed)'},
+      {t:'Paprika – 1 jar (Tue, Wed)'},
+      {t:'Mixed herbs – 1 jar (Mon, Tue)'},
+      {t:'Olive oil – 1 bottle (Mon, Tue, Sat)'},
+      {t:'Sugar – check you have some (Sat pancakes)'},
+      {t:'Peanut butter – 1 jar (snacks)'},
+      {t:'Rice cakes – 1 pack (snacks)'},
+      {t:'Popcorn – 1 bag (snacks)'},
+      {t:'Hummus – 1 tub (snacks)'},
+      {t:'Pizza bases or dough kit – 4 bases / 2 kits (Sat)'},
+      {t:'Passata – 1 x 500g carton (Sat)'},
+      {t:'Sweetcorn – 1 small tin, optional (Sat pizza topping)'},
+      {t:'Beef or turkey pepperoni – 1 pack, no pork, optional (Sat pizza topping)'},
+      {t:'Maple syrup – 1 bottle (Sat pancakes)'},
+      {t:'Gravy granules – 1 tub (Sun roast)'}
+    ],
+    'Bakery':[
+      {t:'Crusty bread/rolls – 1 pack (lunches)'},
+      {t:'Sandwich bread – 1 loaf (lunches, Sun toast)'}
+    ]
+  }
+};
+
+/* ---------------- STATE ---------------- */
+let currentWeek = Object.keys(weeks)[0];
+let shoppingList = null;
+
+function storageKey(){ return 'meal-planner-shopping-week-' + currentWeek; }
+
+function loadList(){
+  let stored = null;
+  try{ stored = localStorage.getItem(storageKey()); }catch(e){ /* storage unavailable */ }
+  if(stored){
+    try{ shoppingList = JSON.parse(stored); return; }catch(e){ /* fall through */ }
+  }
+  shoppingList = JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
+}
+
+function saveList(){
+  try{
+    localStorage.setItem(storageKey(), JSON.stringify(shoppingList));
+    document.getElementById('save-note').textContent = 'Saved in this browser.';
+  }catch(e){
+    document.getElementById('save-note').textContent = 'Changes stay for this session only.';
+  }
+}
+
+/* ---------------- WEEK PICKER ---------------- */
+function renderWeekPicker(){
+  const picker = document.getElementById('week-picker');
+  picker.innerHTML = Object.entries(weeks).map(([num, w])=>`<option value="${num}">${w.label}</option>`).join('');
+  picker.value = currentWeek;
+  picker.addEventListener('change', (e)=>{
+    currentWeek = e.target.value;
+    loadList();
+    renderPlan();
+    renderShopList();
+  });
+}
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------------- MEAL PLAN ---------------- */
+function tagPills(tags){
+  return tags.map(t=>`<span class="pill ${tagMeta[t].cls}">${tagMeta[t].label}</span>`).join('');
+}
+
+function renderSlotCard(day, mealId){
+  const meal = mealBank[mealId];
+  return `<div class="day-card" data-id="${mealId}">
+    <div class="day-name">${day}</div>
+    <div class="meal-name">${meal.name}</div>
+    <div class="tag-row">${tagPills(meal.tags)}</div>
+  </div>`;
+}
+
+function renderPlan(){
+  const w = weeks[currentWeek];
+  document.getElementById('dinner-grid').innerHTML = w.dinners.map(d=>renderSlotCard(d.day, d.mealId)).join('');
+  document.getElementById('breakfast-grid').innerHTML = w.breakfasts.map(d=>renderSlotCard(d.day, d.mealId)).join('');
+  document.querySelectorAll('#panel-plan .day-card').forEach(card=>{
+    card.addEventListener('click', ()=>openRecipe(card.dataset.id));
+  });
+}
+
+function openRecipe(id){
+  const meal = mealBank[id];
+  if(!meal) return;
+  const modal = document.getElementById('modal-body');
+  modal.innerHTML = `
+    <button class="modal-close" id="modal-close-btn">&times;</button>
+    <h2>${meal.name}</h2>
+    <div class="tag-row">${tagPills(meal.tags)}</div>
+    <h3>Ingredients</h3>
+    <ul class="ingredients">${meal.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <h3>Method</h3>
+    <ol class="steps">${meal.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id === 'overlay') closeModal(); });
+
+/* ---------------- SHOPPING LIST ---------------- */
+function renderShopList(){
+  const catSelect = document.getElementById('new-cat');
+  catSelect.innerHTML = Object.keys(shoppingList).map(c=>`<option value="${c}">${c}</option>`).join('');
+  const container = document.getElementById('shop-lists');
+  container.innerHTML = Object.entries(shoppingList).map(([cat, items])=>`
+    <div class="cat" data-cat="${cat}">
+      <h3>${cat}</h3>
+      <ul>${items.map((item, idx)=>`
+        <li class="${item.checked?'checked':''}" data-idx="${idx}">
+          <input type="checkbox" ${item.checked?'checked':''}>
+          <span class="item-label">${item.t}</span>
+          <button class="del" title="Remove">&times;</button>
+        </li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  container.querySelectorAll('.cat').forEach(catEl=>{
+    const cat = catEl.dataset.cat;
+    catEl.querySelectorAll('li').forEach(li=>{
+      const idx = Number(li.dataset.idx);
+      li.querySelector('input[type=checkbox]').addEventListener('change', (e)=>{
+        shoppingList[cat][idx].checked = e.target.checked;
+        li.classList.toggle('checked', e.target.checked);
+        saveList();
+      });
+      li.querySelector('.del').addEventListener('click', ()=>{
+        shoppingList[cat].splice(idx,1);
+        renderShopList();
+        saveList();
+      });
+    });
+  });
+}
+
+document.getElementById('add-btn').addEventListener('click', addItem);
+document.getElementById('new-item').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') addItem(); });
+
+function addItem(){
+  const input = document.getElementById('new-item');
+  const cat = document.getElementById('new-cat').value;
+  const text = input.value.trim();
+  if(!text) return;
+  shoppingList[cat].push({t:text, checked:false});
+  input.value = '';
+  renderShopList();
+  saveList();
+}
+
+document.getElementById('reset-btn').addEventListener('click', ()=>{
+  shoppingList = JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
+  renderShopList();
+  saveList();
+});
+
+/* ---------------- MEAL BANK ---------------- */
+function renderBank(){
+  const clusterTags = Object.keys(tagMeta).filter(tag=>
+    Object.values(mealBank).filter(m=>m.tags.includes(tag)).length >= 2
+  );
+  document.getElementById('clusters').innerHTML = clusterTags.map(tag=>{
+    const meta = tagMeta[tag];
+    const members = Object.entries(mealBank).filter(([id,m])=>m.tags.includes(tag));
+    return `<div class="cluster-box">
+      <h3><span class="pill ${meta.cls}">${meta.label}</span> ${meta.clusterName}</h3>
+      <p>${meta.clusterNote}</p>
+      <div class="tag-row">${members.map(([id,m])=>`<span class="pill ${meta.cls}" style="cursor:pointer" data-id="${id}">${m.name}</span>`).join('')}</div>
+    </div>`;
+  }).join('') || '<p class="subtitle">Add a second meal with a shared tag to see clusters appear here.</p>';
+
+  document.getElementById('bank-grid').innerHTML = Object.entries(mealBank).map(([id,m])=>`
+    <div class="day-card" data-id="${id}">
+      <div class="day-name">${m.slot}</div>
+      <div class="meal-name">${m.name}</div>
+      <div class="tag-row">${tagPills(m.tags)}</div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('#panel-bank [data-id]').forEach(el=>{
+    el.addEventListener('click', ()=>openRecipe(el.dataset.id));
+  });
+}
+
+/* ---------------- INIT ---------------- */
+renderWeekPicker();
+renderPlan();
+loadList();
+renderShopList();
+renderBank();
+</script>
+</body>
+</html>
