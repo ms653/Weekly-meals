@@ -67,11 +67,6 @@
   .modal ol.steps li{margin-bottom:6px;}
   .modal mark{background:none;color:var(--rust);font-weight:700;}
 
-  .add-bar{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:22px;}
-  .add-bar input[type=text]{flex:1;min-width:160px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Public Sans', sans-serif;font-size:14px;background:#fff;}
-  .add-bar select{padding:9px 10px;border-radius:8px;border:1px solid var(--line);font-family:'Public Sans', sans-serif;font-size:14px;background:#fff;}
-  .add-bar button{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:14px;cursor:pointer;}
-  .add-bar button:hover{opacity:0.88;}
   .cat{margin-bottom:20px;}
   .cat h3{font-family:'Fraunces', serif;font-weight:600;font-size:17px;margin:0 0 8px;}
   .cat ul{list-style:none;margin:0;padding:0;}
@@ -81,9 +76,21 @@
   .cat li input[type=checkbox]{width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex-shrink:0;}
   .cat li .del{margin-left:auto;background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;opacity:0.5;}
   .cat li .del:hover{opacity:1;color:var(--rust);}
+  .cat li.add-row{cursor:pointer;color:var(--ink-soft);}
+  .cat li.add-row .item-label{font-weight:600;}
+  .cat li.add-row:hover{color:var(--rust);}
+  .cat li.add-row input[type=text]{
+    flex:1;border:none;background:none;font-family:'Public Sans', sans-serif;font-size:15px;color:var(--ink);outline:none;padding:2px 0;
+  }
+  .add-category{margin-top:8px;padding:10px 4px;color:var(--ink-soft);cursor:pointer;font-size:14px;font-weight:600;}
+  .add-category:hover{color:var(--rust);}
+  .add-category input[type=text]{
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-family:'Public Sans', sans-serif;font-size:14px;background:#fff;width:220px;max-width:100%;
+  }
   .list-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:var(--ink-soft);}
   .list-footer button{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--ink-soft);cursor:pointer;}
   .list-footer button:hover{border-color:var(--rust);color:var(--rust);}
+  .sync-note{font-size:13px;color:var(--ink-soft);}
 
   .cluster-box{margin-bottom:14px;}
   .cluster-box h3{font-family:'Fraunces', serif;font-size:17px;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
@@ -152,16 +159,11 @@
 
   <!-- SHOPPING LIST -->
   <section class="panel" id="panel-shop">
-    <p class="subtitle" style="margin-bottom:16px;">Quantities already account for ingredients shared across meals — the note in brackets shows which meal(s) each item covers.</p>
-    <div class="add-bar">
-      <input type="text" id="new-item" placeholder="Add an item…">
-      <select id="new-cat"></select>
-      <button id="add-btn">Add</button>
-    </div>
+    <p class="subtitle" style="margin-bottom:16px;">Quantities already account for ingredients shared across meals — the note in brackets shows which meal(s) each item covers. Synced automatically across every device.</p>
     <div id="shop-lists"></div>
     <div class="list-footer">
       <button id="reset-btn">Reset to default list</button>
-      <span id="save-note"></span>
+      <span class="sync-note" id="save-note"></span>
     </div>
   </section>
 
@@ -255,7 +257,9 @@ const weeks = {
 
 /* =========================================================================
    SHOPPING LISTS
-   One list per week number, matching the "weeks" object above.
+   One list per week number, matching the "weeks" object above. This is only
+   the starting point — the live list (with ticks and any ad hoc additions)
+   lives in the shared store, keyed per week (see SHARED STORAGE below).
    ========================================================================= */
 const shoppingLists = {
   1:{
@@ -319,39 +323,133 @@ const shoppingLists = {
   }
 };
 
+/* =========================================================================
+   SHARED STORAGE
+   The live shopping list (ticks + ad hoc additions) is kept in a small
+   free key/value store at kvdb.io so every device sees the same list,
+   instead of each browser's own local storage. There's no login on this —
+   anyone with the bucket URL below can read/write it, which is a fine
+   trade for a household grocery list. Local storage is still used as a
+   same-device cache so the page has something to show immediately and
+   still works (read-only, from the last sync) if the network is down.
+   ========================================================================= */
+const KVDB_BUCKET = '6ce9CfkYV8RHp5PnGG4MeT';
+function kvdbUrl(key){ return `https://kvdb.io/${KVDB_BUCKET}/${key}`; }
+
+async function fetchShared(key){
+  const res = await fetch(kvdbUrl(key), { cache:'no-store' });
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error('fetch failed: ' + res.status);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function saveShared(key, data){
+  const res = await fetch(kvdbUrl(key), { method:'PUT', body: JSON.stringify(data) });
+  if(!res.ok) throw new Error('save failed: ' + res.status);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 /* ---------------- STATE ---------------- */
 let currentWeek = Object.keys(weeks)[0];
 let shoppingList = null;
+let addingItemCat = null;    // category currently showing its inline "+ Add item" input
+let addingCategory = false;  // whether the "+ Add category" input is open
+let syncTimer = null;
 
-function storageKey(){ return 'meal-planner-shopping-week-' + currentWeek; }
+function shoppingKey(){ return 'shopping-week-' + currentWeek; }
+function localCacheKey(){ return 'meal-planner-shopping-week-' + currentWeek; }
 
-function loadList(){
-  let stored = null;
-  try{ stored = localStorage.getItem(storageKey()); }catch(e){ /* storage unavailable */ }
-  if(stored){
-    try{ shoppingList = JSON.parse(stored); return; }catch(e){ /* fall through */ }
-  }
-  shoppingList = JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
+function setSyncNote(text){ document.getElementById('save-note').textContent = text; }
+
+function cacheLocally(){
+  try{ localStorage.setItem(localCacheKey(), JSON.stringify(shoppingList)); }catch(e){ /* storage unavailable */ }
 }
-
-function saveList(){
+function readLocalCache(){
   try{
-    localStorage.setItem(storageKey(), JSON.stringify(shoppingList));
-    document.getElementById('save-note').textContent = 'Saved in this browser.';
+    const stored = localStorage.getItem(localCacheKey());
+    return stored ? JSON.parse(stored) : null;
+  }catch(e){ return null; }
+}
+
+/* Full load: called on first page load and whenever the week changes. */
+async function loadList(){
+  setSyncNote('Syncing…');
+  const key = shoppingKey();
+  try{
+    const shared = await fetchShared(key);
+    if(shared){
+      shoppingList = shared;
+      cacheLocally();
+      setSyncNote('Synced');
+    }else{
+      // Nothing shared yet for this week - seed it from a local cache if one
+      // exists (e.g. from before sync existed), else the built-in defaults,
+      // then push that up so other devices see the same starting point.
+      shoppingList = readLocalCache() || JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
+      cacheLocally();
+      saveShared(key, shoppingList)
+        .then(()=>setSyncNote('Synced'))
+        .catch(()=>setSyncNote("Couldn't reach the shared list — showing your last saved copy"));
+    }
   }catch(e){
-    document.getElementById('save-note').textContent = 'Changes stay for this session only.';
+    shoppingList = readLocalCache() || JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
+    setSyncNote('Offline — showing your last saved copy');
   }
 }
+
+/* Lightweight refresh: called on a timer and when the Shopping tab regains
+   focus, to pick up changes made on another device without a full reload. */
+async function refreshFromShared(){
+  try{
+    const shared = await fetchShared(shoppingKey());
+    if(shared && JSON.stringify(shared) !== JSON.stringify(shoppingList)){
+      shoppingList = shared;
+      cacheLocally();
+      renderShopList();
+    }
+    setSyncNote('Synced');
+  }catch(e){
+    setSyncNote("Offline — showing your last saved copy");
+  }
+}
+
+function persist(){
+  cacheLocally();
+  setSyncNote('Saving…');
+  saveShared(shoppingKey(), shoppingList)
+    .then(()=>setSyncNote('Synced'))
+    .catch(()=>setSyncNote("Couldn't save — will retry"));
+}
+
+function startSyncPolling(){
+  if(syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(()=>{
+    if(document.hidden) return;
+    if(!document.getElementById('panel-shop').classList.contains('active')) return;
+    if(addingItemCat !== null || addingCategory) return; // don't yank focus mid-typing
+    refreshFromShared();
+  }, 8000);
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && document.getElementById('panel-shop').classList.contains('active')){
+    refreshFromShared();
+  }
+});
 
 /* ---------------- WEEK PICKER ---------------- */
 function renderWeekPicker(){
   const picker = document.getElementById('week-picker');
   picker.innerHTML = Object.entries(weeks).map(([num, w])=>`<option value="${num}">${w.label}</option>`).join('');
   picker.value = currentWeek;
-  picker.addEventListener('change', (e)=>{
+  picker.addEventListener('change', async (e)=>{
     currentWeek = e.target.value;
-    loadList();
     renderPlan();
+    await loadList();
     renderShopList();
   });
 }
@@ -363,6 +461,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'shop') refreshFromShared();
   });
 });
 
@@ -410,57 +509,111 @@ document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.
 
 /* ---------------- SHOPPING LIST ---------------- */
 function renderShopList(){
-  const catSelect = document.getElementById('new-cat');
-  catSelect.innerHTML = Object.keys(shoppingList).map(c=>`<option value="${c}">${c}</option>`).join('');
   const container = document.getElementById('shop-lists');
-  container.innerHTML = Object.entries(shoppingList).map(([cat, items])=>`
-    <div class="cat" data-cat="${cat}">
-      <h3>${cat}</h3>
-      <ul>${items.map((item, idx)=>`
-        <li class="${item.checked?'checked':''}" data-idx="${idx}">
-          <input type="checkbox" ${item.checked?'checked':''}>
-          <span class="item-label">${item.t}</span>
-          <button class="del" title="Remove">&times;</button>
-        </li>`).join('')}
+  const categories = Object.keys(shoppingList);
+
+  container.innerHTML = categories.map(cat => `
+    <div class="cat" data-cat="${escapeHtml(cat)}">
+      <h3>${escapeHtml(cat)}</h3>
+      <ul>
+        ${shoppingList[cat].map((item, idx) => `
+          <li class="${item.checked?'checked':''}" data-idx="${idx}">
+            <input type="checkbox" ${item.checked?'checked':''}>
+            <span class="item-label">${escapeHtml(item.t)}</span>
+            <button class="del" title="Remove">&times;</button>
+          </li>`).join('')}
+        ${addingItemCat === cat
+          ? `<li class="add-row"><input type="text" class="add-item-input" placeholder="Add an item…"></li>`
+          : `<li class="add-row" data-add-cat="${escapeHtml(cat)}"><span class="item-label">+ Add item</span></li>`
+        }
       </ul>
     </div>
-  `).join('');
+  `).join('') + (
+    addingCategory
+      ? `<div class="add-category"><input type="text" id="new-cat-input" placeholder="Category name…"></div>`
+      : `<div class="add-category" id="add-category-btn">+ Add category</div>`
+  );
+
   container.querySelectorAll('.cat').forEach(catEl=>{
     const cat = catEl.dataset.cat;
-    catEl.querySelectorAll('li').forEach(li=>{
+    catEl.querySelectorAll('li[data-idx]').forEach(li=>{
       const idx = Number(li.dataset.idx);
       li.querySelector('input[type=checkbox]').addEventListener('change', (e)=>{
         shoppingList[cat][idx].checked = e.target.checked;
         li.classList.toggle('checked', e.target.checked);
-        saveList();
+        persist();
       });
       li.querySelector('.del').addEventListener('click', ()=>{
         shoppingList[cat].splice(idx,1);
         renderShopList();
-        saveList();
+        persist();
       });
     });
   });
+
+  container.querySelectorAll('.add-row[data-add-cat]').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      addingItemCat = row.dataset.addCat;
+      renderShopList();
+      const input = container.querySelector('.add-item-input');
+      if(input) input.focus();
+    });
+  });
+  const activeItemInput = container.querySelector('.add-item-input');
+  if(activeItemInput){
+    activeItemInput.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') commitNewItem(activeItemInput);
+      if(e.key === 'Escape'){ addingItemCat = null; renderShopList(); }
+    });
+    activeItemInput.addEventListener('blur', ()=> commitNewItem(activeItemInput));
+  }
+
+  const addCatBtn = document.getElementById('add-category-btn');
+  if(addCatBtn){
+    addCatBtn.addEventListener('click', ()=>{
+      addingCategory = true;
+      renderShopList();
+      const input = document.getElementById('new-cat-input');
+      if(input) input.focus();
+    });
+  }
+  const newCatInput = document.getElementById('new-cat-input');
+  if(newCatInput){
+    newCatInput.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') commitNewCategory(newCatInput);
+      if(e.key === 'Escape'){ addingCategory = false; renderShopList(); }
+    });
+    newCatInput.addEventListener('blur', ()=> commitNewCategory(newCatInput));
+  }
 }
 
-document.getElementById('add-btn').addEventListener('click', addItem);
-document.getElementById('new-item').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') addItem(); });
-
-function addItem(){
-  const input = document.getElementById('new-item');
-  const cat = document.getElementById('new-cat').value;
+function commitNewItem(input){
+  const cat = addingItemCat;
   const text = input.value.trim();
-  if(!text) return;
-  shoppingList[cat].push({t:text, checked:false});
-  input.value = '';
+  addingItemCat = null;
+  if(cat && text){
+    shoppingList[cat] = shoppingList[cat] || [];
+    shoppingList[cat].push({t:text, checked:false});
+    persist();
+  }
   renderShopList();
-  saveList();
+}
+
+function commitNewCategory(input){
+  const name = input.value.trim();
+  addingCategory = false;
+  if(name && !shoppingList[name]){
+    shoppingList[name] = [];
+    persist();
+  }
+  renderShopList();
 }
 
 document.getElementById('reset-btn').addEventListener('click', ()=>{
+  if(!confirm('Reset the shared shopping list for this week back to the default? Everyone will see this change.')) return;
   shoppingList = JSON.parse(JSON.stringify(shoppingLists[currentWeek] || {}));
   renderShopList();
-  saveList();
+  persist();
 });
 
 /* ---------------- MEAL BANK ---------------- */
@@ -494,9 +647,9 @@ function renderBank(){
 /* ---------------- INIT ---------------- */
 renderWeekPicker();
 renderPlan();
-loadList();
-renderShopList();
+loadList().then(renderShopList);
 renderBank();
+startSyncPolling();
 </script>
 </body>
 </html>

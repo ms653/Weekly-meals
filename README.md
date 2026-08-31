@@ -44,7 +44,18 @@ Everything editable lives near the top of the `<script>` tag in `index.html`:
 
 The week picker at the top of the page updates itself from whatever numbers exist in `weeks` — no other code changes needed.
 
+## Shopping list syncing
+
+The shopping list (items + ticks) now syncs across every device automatically, via a small free key/value store at [kvdb.io](https://kvdb.io) — no accounts, no backend to run. The page checks for changes every 8 seconds while the Shopping List tab is open, and immediately whenever you switch to that tab or bring the page back into focus.
+
+The bucket ID is the `KVDB_BUCKET` constant near the top of the `<script>` tag in `index.html`. A few things worth knowing:
+
+- There's no login on this — anyone who has the bucket ID (i.e. anyone who can read this repo's `index.html`) can read or write the list. Fine for a household grocery list, not something to reuse for sensitive data.
+- If the network is unreachable, the page falls back to the last-synced copy cached in that device's local storage (read-only until it's back online) — see the `sync-note` text under the list for the current status ("Synced" / "Syncing…" / "Offline — showing your last saved copy").
+- It's last-write-wins: if two people edit at the same moment, the later save overwrites the earlier one wholesale. Not an issue at the scale of a household list, but worth knowing.
+- If kvdb.io ever needs to be swapped for something else (it disappears, gets slow, etc.), everything sync-related lives behind `fetchShared`/`saveShared` in `index.html` — swap those two functions for a different backend and the rest of the app doesn't change.
+
 ## Notes
 
-- Ticking off shopping list items and anything you add ad hoc is saved in your browser's local storage — it's per-device, not shared between your phone and Mel's, and won't survive clearing browser data.
 - The Meal Bank tab automatically groups any meals that share a tag into a "cluster" card, so before planning a new week you can see at a glance what's worth batch-cooking again.
+- "Reset to default list" resets the *shared* list for everyone (it asks for confirmation first).
