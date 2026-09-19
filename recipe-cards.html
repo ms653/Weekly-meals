@@ -32,13 +32,16 @@
   .intro h1{ font-family:var(--font-display); font-weight:800; font-size:clamp(26px,5vw,34px); letter-spacing:-.01em; text-wrap:balance; }
   .intro p{ margin-top:8px; font-size:14.5px; color:var(--muted); line-height:1.6; max-width:60ch; }
 
-  .jump{ display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 30px; }
-  .jump a{ display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:700; color:var(--ink); text-decoration:none; background:var(--panel); transition:border-color .15s ease, color .15s ease; }
-  .jump a:hover{ border-color:var(--accent); color:var(--accent); }
-  .jump a.shop{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
-  .jump a.shop:hover{ opacity:.88; color:var(--paper); }
+  .jump{ display:flex; flex-wrap:wrap; gap:8px; margin:0 -20px 26px; padding:14px 20px; position:sticky; top:0; z-index:10; background:var(--paper); border-bottom:1px solid var(--line); }
+  .jump button{ display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:700; font-family:var(--font-body); color:var(--ink); background:var(--panel); cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease; }
+  .jump button:hover{ border-color:var(--accent); color:var(--accent); }
+  .jump button.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .jump button.shop{ margin-left:auto; }
 
-  .card{ background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:0 10px 34px rgba(30,22,8,0.10); overflow:hidden; margin-bottom:22px; scroll-margin-top:16px; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:0 10px 34px rgba(30,22,8,0.10); overflow:hidden; margin-bottom:22px; scroll-margin-top:70px; }
   @media (prefers-color-scheme:dark){ .card{ box-shadow:0 10px 34px rgba(0,0,0,0.35); } }
 
   .card-head{ padding:28px 30px 22px; border-bottom:1px solid var(--line); }
@@ -235,19 +238,19 @@
     <p>Scanned from the cookbook, then tweaked so they draw from the same stock cubes, cheese, oil and squash instead of seven separate shopping trips. Cards below are in Plateful's own recipe format; the shopping list at the end has everything totalled up.</p>
   </div>
 
-  <nav class="jump" aria-label="Jump to a recipe">
-    <a href="#spanish-chicken-sweetcorn-stew">Spanish Chicken Stew</a>
-    <a href="#proper-beef-stew-dumplings">Beef Stew &amp; Dumplings</a>
-    <a href="#lamb-tagine">Lamb Tagine</a>
-    <a href="#coconut-potato-curry">Coconut Potato Curry</a>
-    <a href="#chicken-kyiv-pasta">Chicken Kyiv Pasta</a>
-    <a href="#creamy-butternut-squash-pasta">Butternut Squash Pasta</a>
-    <a href="#chickpea-butternut-squash-dahl">Chickpea &amp; Squash Dahl</a>
-    <a href="#shopping-list" class="shop">Shopping list</a>
+  <nav class="jump" aria-label="Choose a recipe">
+    <button type="button" data-tab="spanish-chicken-sweetcorn-stew">Spanish Chicken Stew</button>
+    <button type="button" data-tab="proper-beef-stew-dumplings">Beef Stew &amp; Dumplings</button>
+    <button type="button" data-tab="lamb-tagine">Lamb Tagine</button>
+    <button type="button" data-tab="coconut-potato-curry">Coconut Potato Curry</button>
+    <button type="button" data-tab="chicken-kyiv-pasta">Chicken Kyiv Pasta</button>
+    <button type="button" data-tab="creamy-butternut-squash-pasta">Butternut Squash Pasta</button>
+    <button type="button" data-tab="chickpea-butternut-squash-dahl">Chickpea &amp; Squash Dahl</button>
+    <button type="button" data-tab="shopping-list" class="shop">Shopping list</button>
   </nav>
 
   <!-- 1. SPANISH CHICKEN AND SWEETCORN STEW -->
-  <div class="card" id="spanish-chicken-sweetcorn-stew">
+  <div class="card tab-panel active" id="spanish-chicken-sweetcorn-stew" data-panel="spanish-chicken-sweetcorn-stew">
     <div class="card-head">
       <h2>Spanish Chicken &amp; Sweetcorn Stew</h2>
       <p class="sub">with smoky paprika, sweetcorn &amp; mashed cannellini beans</p>
@@ -304,7 +307,7 @@
   </div>
 
   <!-- 2. PROPER BEEF STEW AND DUMPLINGS -->
-  <div class="card" id="proper-beef-stew-dumplings">
+  <div class="card tab-panel" id="proper-beef-stew-dumplings" data-panel="proper-beef-stew-dumplings">
     <div class="card-head">
       <h2>Proper Beef Stew &amp; Dumplings</h2>
       <p class="sub">with cheesy suet dumplings</p>
@@ -374,7 +377,7 @@
   </div>
 
   <!-- 3. LAMB TAGINE -->
-  <div class="card" id="lamb-tagine">
+  <div class="card tab-panel" id="lamb-tagine" data-panel="lamb-tagine">
     <div class="card-head">
       <h2>Lamb Tagine</h2>
       <p class="sub">with chickpeas, cumin &amp; cinnamon</p>
@@ -436,7 +439,7 @@
   </div>
 
   <!-- 4. COCONUT POTATO CURRY -->
-  <div class="card" id="coconut-potato-curry">
+  <div class="card tab-panel" id="coconut-potato-curry" data-panel="coconut-potato-curry">
     <div class="card-head">
       <h2>Coconut Potato Curry</h2>
       <p class="sub">with spinach &amp; flatbread</p>
@@ -500,7 +503,7 @@
   </div>
 
   <!-- 5. CHICKEN KYIV PASTA -->
-  <div class="card" id="chicken-kyiv-pasta">
+  <div class="card tab-panel" id="chicken-kyiv-pasta" data-panel="chicken-kyiv-pasta">
     <div class="card-head">
       <h2>Chicken Kyiv Pasta</h2>
       <p class="sub">a creamy one-pot take on the 1970s classic</p>
@@ -559,7 +562,7 @@
   </div>
 
   <!-- 6. CREAMY BUTTERNUT SQUASH PASTA -->
-  <div class="card" id="creamy-butternut-squash-pasta">
+  <div class="card tab-panel" id="creamy-butternut-squash-pasta" data-panel="creamy-butternut-squash-pasta">
     <div class="card-head">
       <h2>Creamy Butternut Squash Pasta</h2>
       <p class="sub">a smoky, veg-packed sauce even fussy eaters go for</p>
@@ -618,7 +621,7 @@
   </div>
 
   <!-- 7. CHICKPEA AND BUTTERNUT SQUASH DAHL -->
-  <div class="card" id="chickpea-butternut-squash-dahl">
+  <div class="card tab-panel" id="chickpea-butternut-squash-dahl" data-panel="chickpea-butternut-squash-dahl">
     <div class="card-head">
       <h2>Chickpea &amp; Butternut Squash Dahl</h2>
       <p class="sub">a creamy, protein-packed vegan dahl</p>
@@ -678,7 +681,7 @@
   </div>
 
   <!-- SHOPPING LIST -->
-  <div class="card shop-card" id="shopping-list">
+  <div class="card shop-card tab-panel" id="shopping-list" data-panel="shopping-list">
     <div class="card-head">
       <h2>Combined Shopping List</h2>
       <p class="sub">all seven recipes, quantities totalled up and shared where possible</p>
@@ -717,6 +720,32 @@
 </div>
 
 <script>
+(function(){
+  var TAB_KEY = 'slow-cooker-cards-active-tab';
+  var buttons = document.querySelectorAll('.jump [data-tab]');
+  var panels = document.querySelectorAll('.tab-panel');
+  var nav = document.querySelector('.jump');
+
+  function activate(id){
+    panels.forEach(function(p){ p.classList.toggle('active', p.dataset.panel === id); });
+    buttons.forEach(function(b){ b.classList.toggle('active', b.dataset.tab === id); });
+    try{ localStorage.setItem(TAB_KEY, id); }catch(e){ /* per-viewer convenience only */ }
+  }
+
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activate(btn.dataset.tab);
+      var navBottom = nav.getBoundingClientRect().bottom + window.scrollY;
+      if (window.scrollY > navBottom) window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  var saved = null;
+  try{ saved = localStorage.getItem(TAB_KEY); }catch(e){ /* fine, just start on the first tab */ }
+  var startId = (saved && document.querySelector('[data-panel="' + saved + '"]')) ? saved : buttons[0].dataset.tab;
+  activate(startId);
+})();
+
 (function(){
   var STORAGE_KEY = 'slow-cooker-cards-shop-checked';
 
