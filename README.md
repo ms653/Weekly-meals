@@ -44,6 +44,10 @@ Two ways, both starting from the Meal Bank tab:
 
 Recipes added either way show up in the Meal Bank grid and in prep clusters just like the built-in ones, marked "· added" so you can tell them apart. Assigning one to a specific day in a specific week is still a code change in `weeks` (see below) — this only covers getting the recipe itself into the bank.
 
+## Printable recipe cards (`recipe-cards.html`)
+
+A separate static page — linked from the "📋 Printable recipe cards" tile on the Meal Bank tab — with full recipe cards (ingredients, utensils, allergens, numbered steps) for the seven slow-cooker batch-cook recipes, plus one combined shopping list. It's a standalone HTML file with its own styling, built to match [ms653/plateful](https://github.com/ms653/plateful)'s own recipe card design (`recipes/RECIPE-CARD-GUIDE.md` and `recipes/recipe-card-demo.html` in that repo) rather than This Week's Kitchen's own look — good for printing or sending to someone outside the household. It doesn't read from `weekly-recipes.json` or the kvdb store; it's a one-off snapshot, so if those seven recipes change meaningfully, this page needs a manual re-export rather than updating itself.
+
 ## Adding a new week
 
 1. **Add any new meals to `mealBank` first.** Give each one an id, a name, a `slot` (`'dinner'` or `'breakfast'`), and a `tags` array — reuse an existing tag (like `'sauce'`) if it shares prep with something already in the bank, so it shows up in the Meal Bank tab's clusters automatically.

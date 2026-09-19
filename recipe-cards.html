@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slow Cooker Recipe Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Karla:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1e1c16; --paper:#f6f3ea; --panel:#ffffff; --line:#e4decb; --muted:#83795f;
+    --accent:#e0900c; --good:#3f8f52; --bad:#c6472f; --scene-bg:#efe7d6;
+    --font-display:'Archivo',-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --font-body:'Karla',"Segoe UI",-apple-system,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#f3ede0; --paper:#161410; --panel:#211e17; --line:#3a3527; --muted:#a89d80; --scene-bg:#2b2620;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#f3ede0; --paper:#161410; --panel:#211e17; --line:#3a3527; --muted:#a89d80; --scene-bg:#2b2620;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); }
+  h1,h2,h3,p{ margin:0; }
+  .wrap{ max-width:800px; margin:0 auto; padding-inline:20px; padding-block:40px 80px; }
+
+  .intro{ margin-bottom:26px; }
+  .kicker{ font-family:var(--font-display); font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
+  .intro h1{ font-family:var(--font-display); font-weight:800; font-size:clamp(26px,5vw,34px); letter-spacing:-.01em; text-wrap:balance; }
+  .intro p{ margin-top:8px; font-size:14.5px; color:var(--muted); line-height:1.6; max-width:60ch; }
+
+  .jump{ display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 30px; }
+  .jump a{ display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:700; color:var(--ink); text-decoration:none; background:var(--panel); transition:border-color .15s ease, color .15s ease; }
+  .jump a:hover{ border-color:var(--accent); color:var(--accent); }
+  .jump a.shop{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .jump a.shop:hover{ opacity:.88; color:var(--paper); }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:0 10px 34px rgba(30,22,8,0.10); overflow:hidden; margin-bottom:22px; scroll-margin-top:16px; }
+  @media (prefers-color-scheme:dark){ .card{ box-shadow:0 10px 34px rgba(0,0,0,0.35); } }
+
+  .card-head{ padding:28px 30px 22px; border-bottom:1px solid var(--line); }
+  .card-head h2{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.01em; text-wrap:balance; }
+  .card-head .sub{ margin-top:5px; font-size:14px; color:var(--muted); font-style:italic; }
+
+  .stats{ display:flex; gap:0; margin-top:18px; border:1px solid var(--line); border-radius:12px; overflow:hidden; flex-wrap:wrap; }
+  .stat{ flex:1 1 25%; min-width:80px; padding:10px 10px; text-align:center; border-right:1px solid var(--line); }
+  .stat:last-child{ border-right:none; }
+  .stat .k{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:700; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .stat .k svg{ width:11px; height:11px; flex:0 0 auto; }
+  .stat .v{ font-family:var(--font-display); font-weight:800; font-size:14.5px; margin-top:4px; font-variant-numeric:tabular-nums; line-height:1.3; }
+
+  .section{ padding:22px 30px; border-bottom:1px solid var(--line); }
+  .section:last-child{ border-bottom:none; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .section-head h3{ font-family:var(--font-display); font-weight:800; font-size:14px; letter-spacing:-.005em; }
+  .section-head .count{ font-size:11px; color:var(--muted); font-weight:600; }
+
+  .ing-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; }
+  @media (max-width:560px){ .ing-grid{ grid-template-columns:1fr; } }
+  .ing-row{ display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); }
+  .ing-icon{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:var(--scene-bg); display:flex; align-items:center; justify-content:center; }
+  .ing-icon svg{ width:20px; height:20px; }
+  .ing-name{ font-size:13px; font-weight:700; }
+  .ing-allergen{ font-size:10px; color:var(--muted); line-height:1.4; }
+  .ing-allergen b{ color:var(--ink); }
+  .ing-qty{ margin-left:auto; font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; padding-left:10px; text-align:right; }
+
+  .not-included{ margin-top:14px; font-size:11.5px; color:var(--muted); }
+  .not-included b{ color:var(--ink); font-weight:700; }
+
+  .utensils{ display:flex; flex-wrap:wrap; gap:8px; }
+  .utensil{ display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; }
+  .utensil svg{ width:15px; height:15px; color:var(--muted); flex:0 0 auto; }
+
+  .steps{ display:flex; flex-direction:column; gap:16px; }
+  .step{ display:grid; grid-template-columns:26px 1fr; gap:13px; }
+  .step-num{ width:24px; height:24px; border-radius:50%; background:var(--ink); color:var(--paper); font-family:var(--font-display); font-weight:800; font-size:11.5px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; margin-top:1px; }
+  .step-body h4{ font-family:var(--font-display); font-weight:800; font-size:14.5px; margin-bottom:5px; }
+  .step-body p{ font-size:13px; line-height:1.65; }
+  .step-body p + p{ margin-top:7px; }
+  .step-body b{ color:var(--ink); }
+  .callout{ font-weight:800; }
+  .callout.tip{ color:var(--good); }
+  .callout.important{ color:var(--bad); }
+  .callout-text{ font-style:italic; }
+
+  .shop-card .section-head h3{ font-size:15px; }
+  .shop-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .shop-row:last-child{ border-bottom:none; }
+  .shop-check{ width:17px; height:17px; flex:0 0 auto; accent-color:var(--good); cursor:pointer; }
+  .shop-label{ font-size:13px; font-weight:600; line-height:1.4; }
+  .shop-row.checked .shop-label{ color:var(--muted); text-decoration:line-through; }
+  .shop-note{ margin-top:4px; font-size:16px; }
+  .shop-intro{ font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:4px; }
+
+  .footer-note{ margin-top:28px; font-size:12px; color:var(--muted); line-height:1.7; text-align:center; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+
+<svg style="display:none" aria-hidden="true">
+<defs>
+  <symbol id="ic-poultry" viewBox="0 0 64 64">
+    <circle cx="26" cy="35" r="10" fill="#e2b48a"/><circle cx="38" cy="30" r="11" fill="#eec6a0"/>
+    <circle cx="41" cy="41" r="8" fill="#e2b48a"/><circle cx="27" cy="43" r="7" fill="#d8a679"/>
+  </symbol>
+  <symbol id="ic-redmeat" viewBox="0 0 64 64">
+    <circle cx="24" cy="34" r="9" fill="#8a5a3f"/><circle cx="36" cy="30" r="10" fill="#a5704a"/>
+    <circle cx="40" cy="40" r="8" fill="#8a5a3f"/><circle cx="26" cy="42" r="7" fill="#9c673f"/>
+  </symbol>
+  <symbol id="ic-onion" viewBox="0 0 64 64">
+    <path d="M32 16 Q46 22 44 38 Q42 50 32 52 Q22 50 20 38 Q18 22 32 16Z" fill="#e0c8a0" stroke="#c9a06a" stroke-width="1.3"/>
+    <path d="M32 16 Q40 24 39 38 M32 16 Q24 24 25 38" stroke="#d3b283" stroke-width="1.2" fill="none"/>
+    <path d="M28 16 Q30 11 32 10 Q34 11 36 16Z" fill="#8a9a5a"/>
+  </symbol>
+  <symbol id="ic-garlic" viewBox="0 0 64 64">
+    <path d="M32 14 Q44 18 42 32 Q41 46 32 50 Q23 46 22 32 Q20 18 32 14Z" fill="#f0e8ca" stroke="#c9a06a" stroke-width="1.5"/>
+    <path d="M32 14 L32 50 M26 20 Q24 32 27 44 M38 20 Q40 32 37 44" stroke="#dcccA0" stroke-width="1.3" fill="none"/>
+  </symbol>
+  <symbol id="ic-carrot" viewBox="0 0 64 64">
+    <path d="M26 14 Q30 20 26 24 M32 12 Q34 19 32 24 M38 14 Q34 20 38 24" stroke="#5f9e5a" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M32 22 Q46 24 44 34 Q40 50 32 54 Q24 50 20 34 Q18 24 32 22Z" fill="#e08a3a"/>
+    <path d="M32 22 L32 52" stroke="#c9701f" stroke-width="1" opacity=".5"/>
+  </symbol>
+  <symbol id="ic-celery" viewBox="0 0 64 64">
+    <path d="M20 14 Q17 32 22 50" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M32 12 Q29 32 33 52" stroke="#a2c97e" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M44 14 Q42 32 46 50" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
+  </symbol>
+  <symbol id="ic-potato" viewBox="0 0 64 64">
+    <path d="M15 32 Q13 18 28 17 Q46 15 50 30 Q52 43 38 45 Q19 47 15 32Z" fill="#c68a52"/>
+    <path d="M23 24 Q32 20 41 25 Q42 32 34 33 Q25 33 23 24Z" fill="#fbe9c8"/>
+  </symbol>
+  <symbol id="ic-squash" viewBox="0 0 64 64">
+    <path d="M27 14 Q22 20 25 26 Q18 30 18 40 Q18 52 32 54 Q46 52 46 40 Q46 30 39 26 Q42 20 37 14 Q34 12 32 15 Q30 12 27 14Z" fill="#e2971f"/>
+    <path d="M32 26 L32 52" stroke="#c67c12" stroke-width="1.3" opacity=".55"/>
+    <path d="M24 30 Q32 34 40 30" stroke="#c67c12" stroke-width="1.1" opacity=".4" fill="none"/>
+    <path d="M27 14 Q29 11 32 15 Q35 11 37 14" stroke="#6f8f3e" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-courgette" viewBox="0 0 64 64">
+    <path d="M12 40 Q10 30 20 26 Q40 18 50 26 Q54 30 50 34 Q34 46 20 46 Q13 46 12 40Z" fill="#4c8a4f"/>
+    <path d="M16 32 Q30 26 46 30" stroke="#3f7440" stroke-width="1.3" opacity=".6" fill="none"/>
+  </symbol>
+  <symbol id="ic-corn" viewBox="0 0 64 64">
+    <path d="M32 12 Q46 16 46 34 Q46 50 32 54 Q18 50 18 34 Q18 16 32 12Z" fill="#f0c93f"/>
+    <g fill="#d9a91f"><circle cx="26" cy="22" r="2"/><circle cx="34" cy="20" r="2"/><circle cx="24" cy="30" r="2"/><circle cx="32" cy="28" r="2"/><circle cx="40" cy="26" r="2"/><circle cx="24" cy="38" r="2"/><circle cx="32" cy="36" r="2"/><circle cx="40" cy="34" r="2"/><circle cx="28" cy="46" r="2"/><circle cx="36" cy="44" r="2"/></g>
+  </symbol>
+  <symbol id="ic-leafy" viewBox="0 0 64 64">
+    <path d="M32 50 Q16 46 18 28 Q26 32 32 50Z" fill="#4a8f4f"/>
+    <path d="M32 50 Q48 46 46 28 Q38 32 32 50Z" fill="#5aa15c"/>
+    <path d="M32 50 Q30 36 32 20 Q35 36 32 50Z" fill="#3f7e46"/>
+  </symbol>
+  <symbol id="ic-cream" viewBox="0 0 64 64">
+    <rect x="16" y="22" width="32" height="30" rx="3" fill="#fbf6e6" stroke="#d9ac2a" stroke-width="1.3"/>
+    <rect x="14" y="16" width="36" height="8" rx="2" fill="#f3e3ae" stroke="#d9ac2a" stroke-width="1.3"/>
+  </symbol>
+  <symbol id="ic-cheese" viewBox="0 0 64 64">
+    <path d="M15 44 L24 18 L52 34 L52 44Z" fill="#f0c93f"/>
+    <circle cx="34" cy="32" r="2.4" fill="#fdeaa0"/><circle cx="41" cy="38" r="2" fill="#fdeaa0"/>
+  </symbol>
+  <symbol id="ic-milk" viewBox="0 0 64 64">
+    <path d="M24 12 H40 V20 L46 28 V50 Q46 54 42 54 H22 Q18 54 18 50 V28 L24 20Z" fill="#fbfaf5" stroke="#d8d2bd" stroke-width="1.3"/>
+    <rect x="18" y="36" width="28" height="8" fill="#8fb5e0" opacity=".55"/>
+  </symbol>
+  <symbol id="ic-butter" viewBox="0 0 64 64">
+    <rect x="14" y="24" width="36" height="22" rx="2" fill="#f3d979" stroke="#d9ac2a" stroke-width="1.3"/>
+    <rect x="14" y="24" width="36" height="6" fill="#fbe9c8"/>
+  </symbol>
+  <symbol id="ic-canned" viewBox="0 0 64 64">
+    <rect x="16" y="16" width="32" height="34" rx="3" fill="#c9cdd4"/>
+    <rect x="16" y="27" width="32" height="14" fill="#e0745a"/>
+    <ellipse cx="32" cy="16" rx="16" ry="4" fill="#e4e7eb"/>
+  </symbol>
+  <symbol id="ic-pasta" viewBox="0 0 64 64">
+    <path d="M18 22 Q32 34 18 46 Q26 46 32 40 Q38 46 46 46 Q32 34 46 22 Q38 22 32 28 Q26 22 18 22Z" fill="#e8c469"/>
+  </symbol>
+  <symbol id="ic-flour" viewBox="0 0 64 64">
+    <path d="M20 18 H44 L46 50 Q46 54 42 54 H22 Q18 54 18 50Z" fill="#fbf6e6" stroke="#d8d2bd" stroke-width="1.3"/>
+    <path d="M20 18 Q32 12 44 18" fill="none" stroke="#d8d2bd" stroke-width="1.3"/>
+  </symbol>
+  <symbol id="ic-lentil" viewBox="0 0 64 64">
+    <path d="M14 34 Q14 46 32 48 Q50 46 50 34 H14Z" fill="#e0d3b0"/>
+    <g fill="#c6472f"><circle cx="24" cy="32" r="2.4"/><circle cx="32" cy="30" r="2.4"/><circle cx="40" cy="33" r="2.4"/><circle cx="28" cy="36" r="2.4"/><circle cx="36" cy="37" r="2.4"/></g>
+  </symbol>
+  <symbol id="ic-spice" viewBox="0 0 64 64">
+    <rect x="20" y="24" width="24" height="28" rx="3" fill="#eee6d2" stroke="#c9a06a" stroke-width="1.3"/>
+    <rect x="24" y="14" width="16" height="10" rx="2" fill="#c9a06a"/>
+    <g fill="#c6472f"><circle cx="27" cy="34" r="1.6"/><circle cx="34" cy="32" r="1.6"/><circle cx="30" cy="40" r="1.6"/><circle cx="38" cy="40" r="1.6"/></g>
+  </symbol>
+  <symbol id="ic-herb" viewBox="0 0 64 64">
+    <path d="M32 14 Q44 18 42 32 Q41 46 32 50 Q23 46 22 32 Q20 18 32 14Z" fill="#5aa15c"/>
+    <line x1="32" y1="16" x2="32" y2="48" stroke="#3f7e46" stroke-width="1.3"/>
+  </symbol>
+  <symbol id="ic-stockcube" viewBox="0 0 64 64">
+    <rect x="16" y="22" width="28" height="28" rx="2" fill="#d9ac2a"/>
+    <path d="M16 22 L24 14 H52 L44 22Z" fill="#eec766"/>
+    <path d="M44 22 L52 14 V42 L44 50Z" fill="#c69622"/>
+  </symbol>
+  <symbol id="ic-oil" viewBox="0 0 64 64">
+    <path d="M27 12 H37 V20 L42 26 V50 Q42 54 38 54 H26 Q22 54 22 50 V26 L27 20Z" fill="#e2971f" opacity=".85"/>
+    <rect x="27" y="12" width="10" height="6" fill="#8c5a78"/>
+  </symbol>
+  <symbol id="ic-bread" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="34" rx="22" ry="16" fill="#e8b869"/>
+    <ellipse cx="32" cy="34" rx="22" ry="16" fill="none" stroke="#c9902f" stroke-width="1.3" opacity=".6"/>
+    <g stroke="#c9902f" stroke-width="1" opacity=".5"><path d="M18 30 Q32 34 46 30"/><path d="M18 38 Q32 42 46 38"/></g>
+  </symbol>
+  <symbol id="ic-sauce" viewBox="0 0 64 64">
+    <path d="M27 12 H37 V18 L41 24 V50 Q41 54 37 54 H27 Q23 54 23 50 V24 L27 18Z" fill="#6f4a2f"/>
+    <rect x="27" y="12" width="10" height="5" fill="#3a2a1a"/>
+  </symbol>
+  <symbol id="ic-raisin" viewBox="0 0 64 64">
+    <g fill="#4a3324"><ellipse cx="26" cy="28" rx="6" ry="7"/><ellipse cx="40" cy="30" rx="6" ry="7"/><ellipse cx="32" cy="42" rx="6" ry="7"/></g>
+  </symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="ic-active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></symbol>
+  <symbol id="ic-servings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2 20c0-3.5 2.7-6 6-6s6 2.5 6 6M13 20c0-2.8 1.8-5 4.5-5s4.5 2.2 4.5 5"/></symbol>
+  <symbol id="ic-difficulty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h4M10 19h4M16 19h4" stroke-linecap="round"/><path d="M6 19V9M12 19V5M18 19v13" stroke-linecap="round"/></symbol>
+</defs>
+</svg>
+
+<div class="wrap">
+
+  <a href="./index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:none;margin-bottom:18px;">&larr; Back to This Week&#39;s Kitchen</a>
+
+  <div class="intro">
+    <p class="kicker">Batch cook · slow cooker set</p>
+    <h1>Seven slow cooker dinners, rejigged to shop as one</h1>
+    <p>Scanned from the cookbook, then tweaked so they draw from the same stock cubes, cheese, oil and squash instead of seven separate shopping trips. Cards below are in Plateful's own recipe format; the shopping list at the end has everything totalled up.</p>
+  </div>
+
+  <nav class="jump" aria-label="Jump to a recipe">
+    <a href="#spanish-chicken-sweetcorn-stew">Spanish Chicken Stew</a>
+    <a href="#proper-beef-stew-dumplings">Beef Stew &amp; Dumplings</a>
+    <a href="#lamb-tagine">Lamb Tagine</a>
+    <a href="#coconut-potato-curry">Coconut Potato Curry</a>
+    <a href="#chicken-kyiv-pasta">Chicken Kyiv Pasta</a>
+    <a href="#creamy-butternut-squash-pasta">Butternut Squash Pasta</a>
+    <a href="#chickpea-butternut-squash-dahl">Chickpea &amp; Squash Dahl</a>
+    <a href="#shopping-list" class="shop">Shopping list</a>
+  </nav>
+
+  <!-- 1. SPANISH CHICKEN AND SWEETCORN STEW -->
+  <div class="card" id="spanish-chicken-sweetcorn-stew">
+    <div class="card-head">
+      <h2>Spanish Chicken &amp; Sweetcorn Stew</h2>
+      <p class="sub">with smoky paprika, sweetcorn &amp; mashed cannellini beans</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">3–6 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">5 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">3 adults + 2 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">8 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Cannellini or haricot beans</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-poultry"/></svg></div><div><div class="ing-name">Chicken thighs, boneless &amp; skinless</div></div><div class="ing-qty">500g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-corn"/></svg></div><div><div class="ing-name">Frozen sweetcorn kernels</div></div><div class="ing-qty">300g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Passata</div></div><div class="ing-qty">500g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Smoked paprika</div></div><div class="ing-qty">3 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cube</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves</div></div><div class="ing-qty">2</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h16l-2 9a2 2 0 01-2 2H8a2 2 0 01-2-2L4 10z"/><path d="M8 10a4 4 0 018 0"/></svg>Mixing bowl</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13M8 12l4 4 4-4"/><path d="M5 21h14"/></svg>Potato masher</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">4 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Mash the beans</h4>
+          <p>Rinse the <b>beans</b> and mash with a potato masher in a bowl until none are left whole, then tip into the slow cooker with the rest of the ingredients.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Rinse out the passata</h4>
+          <p>Half-fill the empty <b>passata</b> carton with cold water, swill out the corners, and add that to the pot too — it keeps every bit of sauce out of the bin.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Cook low and slow</h4>
+          <p>Stir well, flattening the <b>chicken</b> so it's under the liquid. Lid on, HIGH for 3 hours or LOW for 5–6 hours, until the chicken is very tender.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">Whole sweetcorn kernels aren't a choking risk from 6 months, so this is fine as-is for littles — blend a portion smooth for younger babies.</span></p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Serve</h4>
+          <p>Spoon into bowls with potatoes, pasta, rice, or soft flatbread for dunking, and a scatter of chopped herbs if you like.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PROPER BEEF STEW AND DUMPLINGS -->
+  <div class="card" id="proper-beef-stew-dumplings">
+    <div class="card-head">
+      <h2>Proper Beef Stew &amp; Dumplings</h2>
+      <p class="sub">with cheesy suet dumplings</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">4–8 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">20 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 3 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">14 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-redmeat"/></svg></div><div><div class="ing-name">Stewing beef, diced lean</div></div><div class="ing-qty">750g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-celery"/></svg></div><div><div class="ing-name">Celery sticks</div></div><div class="ing-qty">5</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-onion"/></svg></div><div><div class="ing-name">Onion</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-carrot"/></svg></div><div><div class="ing-name">Carrots, small</div></div><div class="ing-qty">3</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-oil"/></svg></div><div><div class="ing-name">Sunflower oil</div></div><div class="ing-qty">2 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-flour"/></svg></div><div><div class="ing-name">Plain flour</div><div class="ing-allergen"><b>Contains:</b> Wheat, Gluten</div></div><div class="ing-qty">2 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-potato"/></svg></div><div><div class="ing-name">Potatoes, large</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-sauce"/></svg></div><div><div class="ing-name">Worcestershire sauce (optional)</div><div class="ing-allergen"><b>Contains:</b> Fish</div></div><div class="ing-qty">1 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-herb"/></svg></div><div><div class="ing-name">Bay leaves</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves</div></div><div class="ing-qty">3</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-herb"/></svg></div><div><div class="ing-name">Dried mixed herbs</div></div><div class="ing-qty">1 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cubes</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-flour"/></svg></div><div><div class="ing-name">Self-raising flour, for dumplings</div><div class="ing-allergen"><b>Contains:</b> Wheat, Gluten</div></div><div class="ing-qty">200g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-butter"/></svg></div><div><div class="ing-name">Suet, beef or vegetarian</div><div class="ing-allergen"><i>may contain Wheat</i></div></div><div class="ing-qty">70g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-cheese"/></svg></div><div><div class="ing-name">Smoked Cheddar</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">50g</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="13" r="7"/><path d="M17 9l5-4"/></svg>Frying pan</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h16l-2 9a2 2 0 01-2 2H8a2 2 0 01-2-2L4 10z"/><path d="M8 10a4 4 0 018 0"/></svg>Mixing bowl</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h7l2 5v9a2 2 0 01-2 2H9a2 2 0 01-2-2V4z"/><path d="M16 9h2a2 2 0 012 2v3a2 2 0 01-2 2h-1"/></svg>Jug</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">5 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Soften the veg</h4>
+          <p>Finely dice the <b>celery</b>, <b>onion</b> and <b>carrots</b>. Cook in a large frying pan with a little oil for about 5 minutes until starting to soften, then tip into the slow cooker.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Flour and brown the beef</h4>
+          <p>Coat the <b>beef</b> in the <b>flour</b>, shaking off the excess, and peel &amp; quarter the <b>potatoes</b>. Brown the beef in batches in the same hot pan until dark and crispy outside, then add to the slow cooker too.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Fill and cook</h4>
+          <p>Add the potatoes and the rest of the ingredients (<b>bay leaves</b>, <b>garlic</b>, <b>mixed herbs</b>, <b>Worcestershire sauce</b>) with the <b>stock cubes</b> dissolved in 800ml boiling water. Stir well, lid on, and cook 6–8 hours on LOW or 4–5 hours on HIGH, until the meat falls apart with gentle pressure.</p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Shape the dumplings</h4>
+          <p>An hour before serving, mix the <b>self-raising flour</b>, <b>suet</b> and <b>Cheddar</b> with a pinch of pepper and about 160ml cold water into a slightly sticky dough. Roll into golf-ball-sized dumplings — about 10.</p>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <h4>Finish uncovered</h4>
+          <p>Stir the stew, drop the dumplings on top without overlapping, then cook uncovered on HIGH until they've doubled in size.</p>
+          <p><span class="callout important">IMPORTANT:</span> <span class="callout-text">Keep the lid off once the dumplings go in — lifting it partway through stops them rising properly.</span></p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. LAMB TAGINE -->
+  <div class="card" id="lamb-tagine">
+    <div class="card-head">
+      <h2>Lamb Tagine</h2>
+      <p class="sub">with chickpeas, cumin &amp; cinnamon</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">4–7 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">10 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 3 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">12 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-redmeat"/></svg></div><div><div class="ing-name">Lamb shoulder, diced</div></div><div class="ing-qty">750g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-oil"/></svg></div><div><div class="ing-name">Sunflower oil</div></div><div class="ing-qty">2 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-onion"/></svg></div><div><div class="ing-name">Onion, large</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-carrot"/></svg></div><div><div class="ing-name">Carrots, large</div></div><div class="ing-qty">3</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Ground cumin</div></div><div class="ing-qty">2 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Sweet paprika</div></div><div class="ing-qty">2 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Chickpeas, drained</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Chopped tomatoes</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cubes</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves, large</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Ground cinnamon</div></div><div class="ing-qty">½ tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-raisin"/></svg></div><div><div class="ing-name">Raisins (optional)</div></div><div class="ing-qty">a handful</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper, fresh herbs to garnish (optional)</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="13" r="7"/><path d="M17 9l5-4"/></svg>Frying pan</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="3" width="6" height="15" rx="2"/><path d="M8 21h8"/></svg>Kettle</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">4 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Brown the lamb in batches</h4>
+          <p>Heat 1 tbsp oil in a large frying pan over high heat. Fry half the <b>lamb</b> in a single layer for 2 minutes until browned, turn for another 1–2 minutes, then move to the slow cooker. Repeat with the rest.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Add the aromatics</h4>
+          <p>Grate or finely dice the <b>onion</b>, peel and chunk the <b>carrots</b>, and add both to the slow cooker with the <b>cumin</b>, <b>paprika</b>, <b>chickpeas</b>, <b>tomatoes</b>, <b>stock cubes</b>, <b>garlic</b>, <b>cinnamon</b> and <b>raisins</b>.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">Deglaze the empty hot frying pan with 400ml boiling water, scraping up the browned bits, then pour that into the pot too — that's where a lot of the flavour is hiding.</span></p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Cook low and slow</h4>
+          <p>Stir well, lid on, and cook for 4 hours on HIGH or 6–7 hours on LOW until the meat is super tender.</p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Serve</h4>
+          <p>Spoon into bowls with boiled potatoes to soak up the juices, and fresh herbs to garnish if you like.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. COCONUT POTATO CURRY -->
+  <div class="card" id="coconut-potato-curry">
+    <div class="card-head">
+      <h2>Coconut Potato Curry</h2>
+      <p class="sub">with spinach &amp; flatbread</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">3½–6 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">10 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 2 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">10 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-potato"/></svg></div><div><div class="ing-name">Potatoes, all-rounder (e.g. Maris Piper)</div></div><div class="ing-qty">1kg</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-onion"/></svg></div><div><div class="ing-name">Onion, large</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves, large</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-oil"/></svg></div><div><div class="ing-name">Olive oil</div></div><div class="ing-qty">2 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-sauce"/></svg></div><div><div class="ing-name">Tomato purée</div></div><div class="ing-qty">2 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Garam masala</div></div><div class="ing-qty">2 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Mild curry powder</div></div><div class="ing-qty">1 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Coconut milk</div><div class="ing-allergen"><b>Contains:</b> Coconut</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cube</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-leafy"/></svg></div><div><div class="ing-name">Frozen spinach</div></div><div class="ing-qty">200g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-bread"/></svg></div><div><div class="ing-name">Flatbreads, to serve</div><div class="ing-allergen"><b>Contains:</b> Wheat, Gluten</div></div><div class="ing-qty">3–4</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="3" width="6" height="15" rx="2"/><path d="M8 21h8"/></svg>Kettle</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">5 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Soften the base</h4>
+          <p>Peel and grate (or finely dice) the <b>onion</b>, and finely grate the <b>garlic</b>. Add both to the slow cooker with the <b>oil</b>, stir, lid on, and cook 10–15 minutes on HIGH.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Add the spice paste</h4>
+          <p>Stir in the <b>tomato purée</b>, <b>garam masala</b> and <b>curry powder</b>. Lid back on for a further 10 minutes, until the kitchen smells aromatic.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Add the coconut milk and potatoes</h4>
+          <p>Dice the <b>potatoes</b> into 3cm chunks. Add them with the <b>coconut milk</b> and the <b>stock cube</b> (dissolved in the empty coconut milk can, topped up with boiling water). Stir, lid on, and cook 3 hours on HIGH or 5 hours on LOW.</p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Stir in the spinach</h4>
+          <p>Add the <b>frozen spinach</b>, lid back on, and cook a further 30 minutes on HIGH or 1 hour on LOW.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">For littles, mash any potato chunks that are too big to hold — it's kept mild throughout, so season adult portions with salt at the table.</span></p>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <h4>Serve</h4>
+          <p>Pile into bowls with a <b>flatbread</b> tucked into the side of each.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. CHICKEN KYIV PASTA -->
+  <div class="card" id="chicken-kyiv-pasta">
+    <div class="card-head">
+      <h2>Chicken Kyiv Pasta</h2>
+      <p class="sub">a creamy one-pot take on the 1970s classic</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">4–7 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">5 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 2 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">9 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-poultry"/></svg></div><div><div class="ing-name">Chicken thighs, boneless &amp; skinless</div></div><div class="ing-qty">600g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-courgette"/></svg></div><div><div class="ing-name">Courgette, finely grated</div></div><div class="ing-qty">1 large</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves</div></div><div class="ing-qty">3</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-butter"/></svg></div><div><div class="ing-name">Butter</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">25g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cube</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-cream"/></svg></div><div><div class="ing-name">Cream cheese</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">150g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-milk"/></svg></div><div><div class="ing-name">Milk</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">150ml</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-pasta"/></svg></div><div><div class="ing-name">Pasta</div><div class="ing-allergen"><b>Contains:</b> Wheat, Gluten — <i>may contain Egg</i></div></div><div class="ing-qty">250g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-cheese"/></svg></div><div><div class="ing-name">Smoked Cheddar, grated (optional)</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">50g</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="3" width="6" height="15" rx="2"/><path d="M8 21h8"/></svg>Box grater</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h16l-2 9a2 2 0 01-2 2H8a2 2 0 01-2-2L4 10z"/><path d="M8 10a4 4 0 018 0"/></svg>Small bowl</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">4 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Load the pot</h4>
+          <p>Add the <b>chicken thighs</b>, grated <b>courgette</b>, <b>garlic</b>, a good grinding of pepper, and the <b>butter</b> to the slow cooker.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Cook until tender</h4>
+          <p>Dissolve the <b>stock cube</b> in 550ml boiling water and add to the pot. Stir well so the chicken is submerged, lid on, and cook HIGH for 3 hours or LOW for 6 hours.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Stir through the sauce</h4>
+          <p>Mix the <b>cream cheese</b> and <b>milk</b> in a bowl until smooth, then pour into the pot with the uncooked <b>pasta</b>. Stir well, squashing each piece of chicken with the spoon so it breaks up a little.</p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Finish and rest</h4>
+          <p>Lid back on, cook 40 minutes on HIGH or 1 hour on LOW. Stir well, then let it stand with the lid on for 5 minutes before stirring again and serving.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">For an even creamier, cheesier result, stir in the <b>smoked Cheddar</b> once everything's cooked and let it melt in during the 5-minute rest.</span></p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. CREAMY BUTTERNUT SQUASH PASTA -->
+  <div class="card" id="creamy-butternut-squash-pasta">
+    <div class="card-head">
+      <h2>Creamy Butternut Squash Pasta</h2>
+      <p class="sub">a smoky, veg-packed sauce even fussy eaters go for</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">3½–6½ hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">10 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 3 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">9 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-squash"/></svg></div><div><div class="ing-name">Butternut squash, chopped</div><div class="ing-allergen"><i>from the same squash as the Dahl — see shopping list</i></div></div><div class="ing-qty">800g–1kg</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-onion"/></svg></div><div><div class="ing-name">Onion</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves, large</div></div><div class="ing-qty">3</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cube</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-pasta"/></svg></div><div><div class="ing-name">Pasta</div><div class="ing-allergen"><b>Contains:</b> Wheat, Gluten</div></div><div class="ing-qty">220g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-milk"/></svg></div><div><div class="ing-name">Milk</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">200ml</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-cream"/></svg></div><div><div class="ing-name">Cream cheese</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">100g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-cheese"/></svg></div><div><div class="ing-name">Smoked Cheddar, grated</div><div class="ing-allergen"><b>Contains:</b> Milk</div></div><div class="ing-qty">90g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Smoked paprika</div></div><div class="ing-qty">2 tsp</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16M6 10l6-6 6 6"/></svg>Stick blender</div>
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="3" width="6" height="15" rx="2"/><path d="M8 21h8"/></svg>Kettle</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">4 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Cook the squash</h4>
+          <p>Add the chopped <b>butternut squash</b>, <b>onion</b> and <b>garlic</b> to the slow cooker with a grinding of pepper. Crumble in the <b>stock cube</b>, add 500ml boiling water, stir, lid on, and cook 3 hours on HIGH or 5–6 hours on LOW until very tender.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Blend to a purée</h4>
+          <p>Blend the veg and cooking liquid until very smooth, with a stick blender or in a food processor, then pour back into the slow cooker.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Cook the pasta in the sauce</h4>
+          <p>Stir in the uncooked <b>pasta</b>, <b>milk</b>, <b>cream cheese</b>, <b>smoked Cheddar</b> and <b>smoked paprika</b>. Lid back on and cook 30–40 minutes on LOW, until the pasta is cooked.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">Leftovers make a great pasta bake — pour into an oven dish with a splash more milk, top with extra cheese, and bake at 200°C fan for about 20 minutes until golden.</span></p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Serve</h4>
+          <p>Spoon straight into bowls — adults can add a touch of salt and pepper to their own portion.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. CHICKPEA AND BUTTERNUT SQUASH DAHL -->
+  <div class="card" id="chickpea-butternut-squash-dahl">
+    <div class="card-head">
+      <h2>Chickpea &amp; Butternut Squash Dahl</h2>
+      <p class="sub">a creamy, protein-packed vegan dahl</p>
+      <div class="stats">
+        <div class="stat"><div class="k"><svg><use href="#ic-clock"/></svg>Total</div><div class="v">3–8 hrs</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-active"/></svg>Active</div><div class="v">5 min</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-servings"/></svg>Serves</div><div class="v">2 adults + 3 littles</div></div>
+        <div class="stat"><div class="k"><svg><use href="#ic-difficulty"/></svg>Difficulty</div><div class="v">Easy</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Ingredients</h3><span class="count">12 items</span></div>
+      <div class="ing-grid">
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-squash"/></svg></div><div><div class="ing-name">Butternut squash, diced</div><div class="ing-allergen"><i>from the same squash as the pasta — see shopping list</i></div></div><div class="ing-qty">700–800g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Chickpeas, with their water</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-lentil"/></svg></div><div><div class="ing-name">Dried red lentils, rinsed</div></div><div class="ing-qty">300g</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-stockcube"/></svg></div><div><div class="ing-name">Vegetable stock cubes</div><div class="ing-allergen"><b>Contains:</b> Celery</div></div><div class="ing-qty">2</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Garam masala</div></div><div class="ing-qty">1 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Mild curry powder</div></div><div class="ing-qty">1 tbsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-herb"/></svg></div><div><div class="ing-name">Dried mixed herbs</div></div><div class="ing-qty">2 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-spice"/></svg></div><div><div class="ing-name">Smoked paprika</div></div><div class="ing-qty">2 tsp</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Coconut milk</div><div class="ing-allergen"><b>Contains:</b> Coconut</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-canned"/></svg></div><div><div class="ing-name">Chopped tomatoes</div></div><div class="ing-qty">400g can</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-onion"/></svg></div><div><div class="ing-name">Onion, finely diced</div></div><div class="ing-qty">1</div></div>
+        <div class="ing-row"><div class="ing-icon"><svg><use href="#ic-garlic"/></svg></div><div><div class="ing-name">Garlic cloves, grated</div></div><div class="ing-qty">2</div></div>
+      </div>
+      <div class="not-included"><b>Not included:</b> black pepper</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Utensils</h3></div>
+      <div class="utensils">
+        <div class="utensil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></svg>Slow cooker</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Cooking steps</h3><span class="count">4 steps</span></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <h4>Everything in one pot</h4>
+          <p>Put all the ingredients into the slow cooker, including the water from the <b>chickpea</b> tin, along with 350ml boiling water. Give it a really good stir.</p>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <h4>Cook low and slow</h4>
+          <p>Lid on, and cook 3–4 hours on HIGH or 6–8 hours on LOW.</p>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <h4>Mash it together</h4>
+          <p>Once done, use a wooden spoon to stir well and mash the soft <b>butternut squash</b> into the sauce a little.</p>
+          <p><span class="callout tip">TIP:</span> <span class="callout-text">Adults can season their portion with a little salt or a dash of chilli sauce — it's kept mild throughout for littles.</span></p>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <h4>Serve</h4>
+          <p>Spoon over rice or with naan, or use it as a pasta sauce.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOPPING LIST -->
+  <div class="card shop-card" id="shopping-list">
+    <div class="card-head">
+      <h2>Combined Shopping List</h2>
+      <p class="sub">all seven recipes, quantities totalled up and shared where possible</p>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Meat</h3><span class="count">3 items</span></div>
+      <p class="shop-intro">Chicken thighs are boneless &amp; skinless in both recipes — buy as one 1.1kg pack.</p>
+      <div id="shop-meat"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Fridge</h3><span class="count">4 items</span></div>
+      <div id="shop-fridge"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Fruit &amp; Veg</h3><span class="count">9 items</span></div>
+      <p class="shop-intro">One large squash (~1.6–1.8kg) covers both squash recipes — split roughly 800g-1kg for the pasta, the rest (~700-800g) for the Dahl.</p>
+      <div id="shop-veg"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3>Store Cupboard</h3><span class="count">18 items</span></div>
+      <p class="shop-intro">Stock cubes are vegetable throughout, so one box covers all seven recipes — 10 cubes needed in total.</p>
+      <div id="shop-cupboard"></div>
+    </div>
+
+    <div class="section">
+      <p class="footer-note" style="margin-top:0;text-align:left;">Tap an item to check it off — that's saved on this device only, so it resets if you clear browser data or open this page somewhere else.</p>
+    </div>
+  </div>
+
+  <p class="footer-note">Recipes adapted from a slow-cooker cookbook and rejigged for shared shopping · card format matches Plateful's own recipe cards</p>
+
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'slow-cooker-cards-shop-checked';
+
+  var MEAT = [
+    ['Boneless, skinless chicken thighs', '1.1kg total (500g + 600g)'],
+    ['Diced stewing beef', '750g'],
+    ['Diced lamb shoulder', '750g']
+  ];
+  var FRIDGE = [
+    ['Cream cheese', 'one ~300g tub (150g + 100g)'],
+    ['Smoked Cheddar', 'one ~200-250g block (50g + 50g + 90g)'],
+    ['Milk', '~350ml (150ml + 200ml)'],
+    ['Butter', '25g']
+  ];
+  var VEG = [
+    ['Onions', '5, net bag'],
+    ['Garlic', '2 bulbs (~17 cloves needed)'],
+    ['Butternut squash', '1 large, ~1.6-1.8kg'],
+    ['Potatoes', '~1.3kg total (one bag covers both recipes)'],
+    ['Carrots', '6 (3 small + 3 large)'],
+    ['Celery', '5 sticks'],
+    ['Courgette', '1 large'],
+    ['Frozen sweetcorn', '300g'],
+    ['Frozen spinach', '200g']
+  ];
+  var CUPBOARD = [
+    ['Low-salt vegetable stock cubes', 'one box (10 cubes needed)'],
+    ['Cannellini or haricot beans', '1 x 400g can'],
+    ['Chickpeas', '2 x 400g cans'],
+    ['Chopped tomatoes', '2 x 400g cans'],
+    ['Coconut milk', '2 x 400g cans'],
+    ['Passata', '500g'],
+    ['Dried red lentils', '300g'],
+    ['Pasta', '~500g (250g + 220g)'],
+    ['Self-raising flour', '200g'],
+    ['Plain flour', '2 tbsp'],
+    ['Suet, beef or vegetarian', '70g'],
+    ['Smoked paprika', 'one jar (7 tsp needed)'],
+    ['Sweet paprika, ground cumin, ground cinnamon', 'for the tagine'],
+    ['Garam masala', 'one jar (~5 tsp needed)'],
+    ['Mild curry powder', 'one jar (2 tbsp needed)'],
+    ['Dried mixed herbs, bay leaves', 'a few tsp + 2 leaves'],
+    ['Worcestershire sauce, tomato purée, raisins', 'small amounts, optional/pantry'],
+    ['Flatbreads', '3-4, to serve']
+  ];
+
+  function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+  function render(containerId, items){
+    var el = document.getElementById(containerId);
+    var checked = {};
+    try{ checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }catch(e){ checked = {}; }
+    el.innerHTML = items.map(function(item){
+      var id = 'sc-' + slugify(item[0]);
+      var isChecked = !!checked[id];
+      return '<div class="shop-row' + (isChecked ? ' checked' : '') + '" data-id="' + id + '">' +
+        '<input type="checkbox" class="shop-check" id="' + id + '"' + (isChecked ? ' checked' : '') + '>' +
+        '<label class="shop-label" for="' + id + '">' + item[0] + ' <span style="color:var(--muted);font-weight:400;">— ' + item[1] + '</span></label>' +
+        '</div>';
+    }).join('');
+    el.querySelectorAll('.shop-check').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var row = cb.closest('.shop-row');
+        row.classList.toggle('checked', cb.checked);
+        try{
+          var state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          state[cb.id] = cb.checked;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }catch(e){ /* per-viewer convenience only - fine if storage is unavailable */ }
+      });
+    });
+  }
+
+  render('shop-meat', MEAT);
+  render('shop-fridge', FRIDGE);
+  render('shop-veg', VEG);
+  render('shop-cupboard', CUPBOARD);
+})();
+</script>
+
+</body>
+</html>
