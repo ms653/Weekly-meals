@@ -6,260 +6,265 @@
 <title>Slow Cooker Recipe Cards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Karla:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Palette and component styles match ms653/plateful's actual deployed app
+     (meal-builder-prototype.html) rather than its recipe-card-demo.html
+     design exploration — same tokens, same Cook Mode structure. */
   :root{
-    --ink:#1e1c16; --paper:#f6f3ea; --panel:#ffffff; --line:#e4decb; --muted:#83795f;
-    --accent:#e0900c; --good:#3f8f52; --bad:#c6472f; --scene-bg:#efe7d6;
-    --font-display:'Archivo',-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
-    --font-body:'Karla',"Segoe UI",-apple-system,Helvetica,Arial,sans-serif;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --ink:#f3ede0; --paper:#161410; --panel:#211e17; --line:#3a3527; --muted:#a89d80; --scene-bg:#2b2620;
-    }
-  }
-  :root[data-theme="dark"]{
-    --ink:#f3ede0; --paper:#161410; --panel:#211e17; --line:#3a3527; --muted:#a89d80; --scene-bg:#2b2620;
+    --accent:#17C299; --ink:#0A1F1B; --bg:#F3FBF5; --panel:#ffffff; --line:#DCEEE1; --muted:#5B6B62;
+    --good:#17B57A; --bad:#E14F3D;
+    --shadow:0 2px 14px rgba(10,31,27,0.05); --shadow-lg:0 8px 24px rgba(10,31,27,0.12);
+    --font-display:'Space Grotesk', -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   }
   *{ box-sizing:border-box; }
-  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); }
+  body{ margin:0; font-family:var(--font-body); background:var(--bg); color:var(--ink); }
   body.modal-open{ overflow:hidden; }
   h1,h2,h3,p{ margin:0; }
-  .wrap{ max-width:800px; margin:0 auto; padding-inline:20px; padding-block:40px 80px; }
+  .wrap{ max-width:900px; margin:0 auto; padding-inline:20px; padding-block:40px 80px; }
 
-  .intro{ margin-bottom:26px; }
   .kicker{ font-family:var(--font-display); font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
   .intro h1{ font-family:var(--font-display); font-weight:800; font-size:clamp(26px,5vw,34px); letter-spacing:-.01em; text-wrap:balance; }
   .intro p{ margin-top:8px; font-size:14.5px; color:var(--muted); line-height:1.6; max-width:60ch; }
 
-  .tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:14px; }
-  .tile{ display:block; width:100%; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; cursor:pointer; font-family:var(--font-body); transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
-  .tile:hover{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,22,8,0.10); }
-  .tile h3{ font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:-.005em; text-wrap:balance; }
-  .tile .tile-sub{ margin-top:4px; font-size:12px; color:var(--muted); font-style:italic; line-height:1.4; }
-  .tile-stats{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:14px; }
-  .tile-stat{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--muted); }
-  .tile-stat svg{ width:12px; height:12px; flex:0 0 auto; }
-  .tile.shop-tile{ background:var(--ink); border-color:var(--ink); }
-  .tile.shop-tile h3{ color:var(--paper); }
-  .tile.shop-tile .tile-sub{ color:var(--paper); opacity:.75; }
-  .tile.shop-tile:hover{ transform:translateY(-2px); opacity:.92; }
+  .btn{ border:1px solid var(--line); background:#fff; color:var(--ink); padding:11px 20px; border-radius:999px; font-size:13px; font-weight:700; font-family:var(--font-body); cursor:pointer; }
+  .btn:hover{ border-color:#B9DDC4; }
+  .btn.primary{ background:var(--accent); color:var(--ink); border-color:var(--accent); font-weight:800; box-shadow:0 4px 14px rgba(23,194,153,.25); }
+  .btn.accent{ background:var(--accent); color:var(--ink); border-color:var(--accent); font-weight:800; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
-  .card-head{ padding:28px 56px 22px 30px; border-bottom:1px solid var(--line); }
-  .card-head h2{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.01em; text-wrap:balance; }
-  .card-head .sub{ margin-top:5px; font-size:14px; color:var(--muted); font-style:italic; }
+  .section-block{ margin-top:28px; }
+  .section-block h3{ font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:800; margin:0 0 12px; }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+  .rcard{ background:#fff; border:1px solid var(--line); border-radius:20px; padding:18px; box-shadow:var(--shadow); }
+  .rcard-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .rcard-diff{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; background:#EAF7EE; color:#0FA47E; border-radius:999px; padding:4px 10px; white-space:nowrap; }
+  .rcard-time{ font-size:11px; color:var(--muted); font-weight:700; text-align:right; }
+  .card-name{ font-family:var(--font-display); font-weight:800; font-size:16px; margin-bottom:2px; color:var(--ink); }
+  .card-sub{ font-size:12px; color:var(--muted); font-style:italic; margin-bottom:10px; }
+  .card-icons{ display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+  .card-icons .food-icon{ width:26px; height:26px; }
+  .card-macros{ display:flex; gap:12px; font-size:11px; color:var(--muted); margin:8px 0 14px; }
+  .card-macros b{ color:var(--ink); font-family:var(--font-display); }
+  .card-actions{ display:flex; gap:8px; }
+  .card-actions .btn{ flex:1; padding:11px; font-size:12.5px; border-radius:12px; box-shadow:none; }
 
-  .stats{ display:flex; gap:0; margin-top:18px; border:1px solid var(--line); border-radius:12px; overflow:hidden; flex-wrap:wrap; }
-  .stat{ flex:1 1 25%; min-width:80px; padding:10px 10px; text-align:center; border-right:1px solid var(--line); }
-  .stat:last-child{ border-right:none; }
-  .stat .k{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:700; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stat .k svg{ width:11px; height:11px; flex:0 0 auto; }
-  .stat .v{ font-family:var(--font-display); font-weight:800; font-size:14.5px; margin-top:4px; font-variant-numeric:tabular-nums; line-height:1.3; }
+  .shop-banner{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:var(--ink); color:#fff; border-radius:20px; padding:20px 24px; margin-top:28px; }
+  .shop-banner h3{ font-family:var(--font-display); font-weight:800; font-size:16px; }
+  .shop-banner p{ font-size:12.5px; color:rgba(255,255,255,.7); margin-top:3px; }
+  .shop-banner .btn{ background:var(--accent); color:var(--ink); border:none; font-weight:800; white-space:nowrap; }
 
-  .section{ padding:22px 30px; border-bottom:1px solid var(--line); }
-  .section:last-child{ border-bottom:none; }
-  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px; }
-  .section-head h3{ font-family:var(--font-display); font-weight:800; font-size:14px; letter-spacing:-.005em; }
-  .section-head .count{ font-size:11px; color:var(--muted); font-weight:600; }
+  .footer-note{ margin-top:28px; font-size:12px; color:var(--muted); line-height:1.7; text-align:center; }
 
-  .ing-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; }
-  @media (max-width:520px){ .ing-grid{ grid-template-columns:1fr; } }
-  .ing-row{ display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); }
-  .ing-icon{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:var(--scene-bg); display:flex; align-items:center; justify-content:center; }
-  .ing-icon svg{ width:20px; height:20px; }
-  .ing-name{ font-size:13px; font-weight:700; }
-  .ing-allergen{ font-size:10px; color:var(--muted); line-height:1.4; }
-  .ing-allergen b{ color:var(--ink); }
-  .ing-qty{ margin-left:auto; font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; padding-left:10px; text-align:right; }
-
-  .not-included{ margin-top:14px; font-size:11.5px; color:var(--muted); }
-  .not-included b{ color:var(--ink); font-weight:700; }
-
-  .utensils{ display:flex; flex-wrap:wrap; gap:8px; }
-  .utensil{ display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; }
-  .utensil svg{ width:15px; height:15px; color:var(--muted); flex:0 0 auto; }
-
-  .step{ display:grid; grid-template-columns:28px 1fr; gap:14px; }
-  .step-num{ width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--paper); font-family:var(--font-display); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; margin-top:1px; }
-  .step-body h4{ font-family:var(--font-display); font-weight:800; font-size:16px; margin-bottom:7px; }
-  .step-body p{ font-size:13.5px; line-height:1.65; }
-  .step-body p + p{ margin-top:8px; }
-  .step-body b{ color:var(--ink); }
-  .callout{ font-weight:800; }
-  .callout.tip{ color:var(--good); }
-  .callout.important{ color:var(--bad); }
-  .callout-text{ font-style:italic; }
+  /* ================= COOK MODE — mirrors meal-builder-prototype.html's #cookOverlay ================= */
+  .cook-overlay{ position:fixed; inset:0; background:rgba(10,31,27,.65); z-index:60; display:none; align-items:center; justify-content:center; padding:20px; animation:pf-fadein .2s ease; overflow-y:auto; }
+  .cook-overlay.open{ display:flex; }
+  .cook-modal{ background:#fff; border-radius:24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; padding:28px; position:relative; animation:pf-slideup .25s ease; margin:auto 0; }
+  .cook-swipe-hint{ display:none; text-align:center; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.04em; margin:-6px 0 14px; }
+  .cook-close{ position:absolute; top:16px; right:16px; border:none; background:var(--bg); color:var(--ink); width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; z-index:2; }
+  .cook-eyebrow{ color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; margin:0 0 6px; }
+  .cook-title{ font-family:var(--font-display); font-weight:800; font-size:22px; color:var(--ink); margin:0 0 18px; }
+  .cook-ing-list{ display:flex; flex-direction:column; gap:2px; margin-bottom:16px; }
+  .cook-ing-row{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px dashed var(--line); }
+  .cook-ing-row .food-icon{ width:32px; height:32px; flex:0 0 auto; }
+  .cook-ing-row .n{ flex:1; font-size:14px; font-weight:700; color:var(--ink); }
+  .cook-ing-row .allergen{ display:block; font-size:10.5px; font-weight:600; color:var(--muted); }
+  .cook-ing-row .a{ font-size:12px; color:var(--muted); font-weight:600; white-space:nowrap; padding-left:10px; }
+  .cook-utensils{ font-size:12px; color:var(--muted); margin:0 0 8px; }
+  .cook-btn-ready{ width:100%; padding:15px; border-radius:14px; font-size:14px; margin-top:12px; }
+  .cook-dots{ display:flex; gap:6px; margin-bottom:18px; }
+  .cook-dots div{ flex:1; height:4px; border-radius:4px; background:#EAF7EE; }
+  .cook-dots div.done{ background:var(--accent); }
+  .cook-icons{ display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+  .cook-icons .food-icon{ width:36px; height:36px; }
+  .cook-step-title{ font-family:var(--font-display); font-weight:800; font-size:15px; color:var(--ink); margin:0 0 6px; }
+  .cook-steptext{ font-size:17px; line-height:1.6; color:var(--ink); margin:0 0 14px; font-weight:500; }
+  .cook-steptext b{ color:var(--ink); background:rgba(23,194,153,0.14); padding:0 3px; border-radius:4px; }
+  .cook-callout{ font-size:13px; line-height:1.5; margin:0 0 22px; padding:10px 12px; border-radius:10px; }
+  .cook-callout b{ letter-spacing:.02em; }
+  .cook-callout span{ font-style:italic; }
+  .cook-callout.tip{ background:#EAF9F1; color:var(--good); }
+  .cook-callout.important{ background:#FDECEA; color:var(--bad); }
+  .cook-btnrow{ display:flex; gap:10px; }
+  .cook-btnrow .btn{ padding:13px 20px; border-radius:14px; font-size:13.5px; }
+  .cook-btnrow .btn.grow{ flex:1; }
 
   .shop-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); }
   .shop-row:last-child{ border-bottom:none; }
   .shop-check{ width:17px; height:17px; flex:0 0 auto; accent-color:var(--good); cursor:pointer; }
   .shop-label{ font-size:13px; font-weight:600; line-height:1.4; }
   .shop-row.checked .shop-label{ color:var(--muted); text-decoration:line-through; }
-  .shop-intro{ font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:4px; }
+  .shop-cat{ margin-bottom:22px; }
+  .shop-cat h4{ font-family:var(--font-display); font-weight:800; font-size:13px; margin-bottom:8px; }
+  .shop-intro{ font-size:12px; color:var(--muted); margin-bottom:8px; line-height:1.5; }
 
-  .footer-note{ margin-top:28px; font-size:12px; color:var(--muted); line-height:1.7; text-align:center; }
+  @keyframes pf-slideup{ from{ transform:translateY(16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  @keyframes pf-fadein{ from{ opacity:0; } to{ opacity:1; } }
 
-  /* ---- modal ---- */
-  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(20,18,14,0.55); align-items:flex-start; justify-content:center; padding:32px 16px; overflow-y:auto; z-index:50; }
-  .modal-overlay.open{ display:flex; }
-  .modal-shell{ background:var(--panel); border:1px solid var(--line); border-radius:20px; max-width:640px; width:100%; position:relative; margin:auto 0; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
-  .modal-close{ position:absolute; top:18px; right:18px; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; }
-  .modal-close:hover{ color:var(--ink); border-color:var(--accent); }
-
-  .modal-tabs{ display:flex; gap:8px; padding:18px 30px 0; }
-  .modal-tab{ border:1px solid var(--line); background:var(--panel); border-radius:999px; padding:7px 16px; font-size:12.5px; font-weight:700; font-family:var(--font-body); color:var(--muted); cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease; }
-  .modal-tab:hover{ border-color:var(--accent); color:var(--accent); }
-  .modal-tab.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
-
-  .modal-view{ display:none; }
-  .modal-view.active{ display:block; }
-
-  .step-section{ padding:22px 30px 28px; }
-  .step-progress{ font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:16px; }
-  #step-slide{ min-height:150px; }
-  .step-controls{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line); }
-  .step-controls button{ border:1px solid var(--line); background:var(--panel); border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; font-family:var(--font-body); color:var(--ink); cursor:pointer; transition:opacity .15s ease, border-color .15s ease, color .15s ease; }
-  .step-controls button:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
-  .step-controls button:disabled{ opacity:.35; cursor:default; }
-  .step-controls button.primary{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
-  .step-controls button.primary:hover:not(:disabled){ opacity:.88; color:var(--paper); }
-  .step-dots{ display:flex; gap:6px; }
-  .step-dot{ width:7px; height:7px; border-radius:50%; background:var(--line); transition:width .15s ease, border-radius .15s ease, background .15s ease; }
-  .step-dot.active{ background:var(--accent); width:18px; border-radius:4px; }
-
-  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+  @media (max-width:640px){
+    .cook-overlay{ padding:0; align-items:flex-end; }
+    .cook-modal{ max-width:100%; width:100%; max-height:92vh; border-radius:24px 24px 0 0; }
+    .cook-swipe-hint{ display:block; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
 
-
 <svg style="display:none" aria-hidden="true">
 <defs>
-  <symbol id="ic-poultry" viewBox="0 0 64 64">
-    <circle cx="26" cy="35" r="10" fill="#e2b48a"/><circle cx="38" cy="30" r="11" fill="#eec6a0"/>
-    <circle cx="41" cy="41" r="8" fill="#e2b48a"/><circle cx="27" cy="43" r="7" fill="#d8a679"/>
+  <!-- Exact icons from ms653/plateful's meal-builder-prototype.html icon sprite, reused verbatim -->
+  <symbol id="ic-chicken" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="46" rx="20" ry="5" fill="#000" opacity="0.06"/>
+    <path d="M14 34 Q16 18 32 17 Q48 18 50 34 Q50 46 32 47 Q14 46 14 34Z" fill="#eecb95" stroke="#c9a06a" stroke-width="1.5"/>
+    <g stroke="#d7ad72" stroke-width="2.5" stroke-linecap="round" opacity="0.75">
+      <line x1="23" y1="24" x2="27" y2="42"/><line x1="32" y1="21" x2="34" y2="43"/><line x1="41" y1="24" x2="39" y2="42"/>
+    </g>
   </symbol>
-  <symbol id="ic-redmeat" viewBox="0 0 64 64">
+  <symbol id="ic-beef" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="5" fill="#000" opacity="0.06"/>
     <circle cx="24" cy="34" r="9" fill="#8a5a3f"/><circle cx="36" cy="30" r="10" fill="#a5704a"/>
     <circle cx="40" cy="40" r="8" fill="#8a5a3f"/><circle cx="26" cy="42" r="7" fill="#9c673f"/>
   </symbol>
   <symbol id="ic-onion" viewBox="0 0 64 64">
-    <path d="M32 16 Q46 22 44 38 Q42 50 32 52 Q22 50 20 38 Q18 22 32 16Z" fill="#e0c8a0" stroke="#c9a06a" stroke-width="1.3"/>
-    <path d="M32 16 Q40 24 39 38 M32 16 Q24 24 25 38" stroke="#d3b283" stroke-width="1.2" fill="none"/>
-    <path d="M28 16 Q30 11 32 10 Q34 11 36 16Z" fill="#8a9a5a"/>
+    <ellipse cx="32" cy="49" rx="16" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M32 16 Q46 20 45 34 Q44 46 32 47 Q20 46 19 34 Q18 20 32 16Z" fill="#e0c9a0" stroke="#c9a06a" stroke-width="1.3"/>
+    <path d="M32 16 L32 47 M25 20 Q23 33 26 45 M39 20 Q41 33 38 45" stroke="#c9a978" stroke-width="1" fill="none" opacity="0.8"/>
+    <path d="M30 16 Q31 10 28 6 Q34 9 33 16Z" fill="#8a9a5f"/>
   </symbol>
   <symbol id="ic-garlic" viewBox="0 0 64 64">
     <path d="M32 14 Q44 18 42 32 Q41 46 32 50 Q23 46 22 32 Q20 18 32 14Z" fill="#f0e8ca" stroke="#c9a06a" stroke-width="1.5"/>
     <path d="M32 14 L32 50 M26 20 Q24 32 27 44 M38 20 Q40 32 37 44" stroke="#dcccA0" stroke-width="1.3" fill="none"/>
   </symbol>
   <symbol id="ic-carrot" viewBox="0 0 64 64">
-    <path d="M26 14 Q30 20 26 24 M32 12 Q34 19 32 24 M38 14 Q34 20 38 24" stroke="#5f9e5a" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-    <path d="M32 22 Q46 24 44 34 Q40 50 32 54 Q24 50 20 34 Q18 24 32 22Z" fill="#e08a3a"/>
-    <path d="M32 22 L32 52" stroke="#c9701f" stroke-width="1" opacity=".5"/>
-  </symbol>
-  <symbol id="ic-celery" viewBox="0 0 64 64">
-    <path d="M20 14 Q17 32 22 50" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M32 12 Q29 32 33 52" stroke="#a2c97e" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M44 14 Q42 32 46 50" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <ellipse cx="32" cy="49" rx="16" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M32 14 Q40 24 38 34 Q36 44 30 47 Q26 44 26 34 Q25 22 32 14Z" fill="#f0883f"/>
+    <g stroke="#d9702c" stroke-width="1.4" opacity="0.6"><line x1="27" y1="26" x2="35" y2="26"/><line x1="27" y1="33" x2="34" y2="33"/></g>
+    <path d="M30 16 Q26 8 20 10 Q26 14 27 18Z" fill="#5f9e5a"/><path d="M33 15 Q35 7 41 8 Q36 12 34 17Z" fill="#6bb877"/>
   </symbol>
   <symbol id="ic-potato" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="48" rx="18" ry="4" fill="#000" opacity="0.06"/>
     <path d="M15 32 Q13 18 28 17 Q46 15 50 30 Q52 43 38 45 Q19 47 15 32Z" fill="#c68a52"/>
-    <path d="M23 24 Q32 20 41 25 Q42 32 34 33 Q25 33 23 24Z" fill="#fbe9c8"/>
+    <path d="M23 24 Q32 20 41 25 Q42 32 34 33 Q25 33 23 24Z" fill="#fbe9c8"/><rect x="30" y="26" width="4" height="4" rx="1" fill="#f5c93f"/>
+  </symbol>
+  <symbol id="ic-corn" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="49" rx="16" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M24 16 Q40 16 42 32 Q44 46 32 48 Q20 46 22 32 Q22 16 24 16Z" fill="#f5cf4a"/>
+    <g fill="#e2b430"><circle cx="27" cy="24" r="1.6"/><circle cx="33" cy="22" r="1.6"/><circle cx="38" cy="26" r="1.6"/><circle cx="25" cy="30" r="1.6"/><circle cx="31" cy="29" r="1.6"/><circle cx="37" cy="32" r="1.6"/><circle cx="26" cy="37" r="1.6"/><circle cx="32" cy="36" r="1.6"/><circle cx="37" cy="39" r="1.6"/><circle cx="28" cy="43" r="1.6"/><circle cx="34" cy="43" r="1.6"/></g>
+    <path d="M22 20 Q14 22 16 34 Q20 26 24 22Z" fill="#6bb877"/>
+  </symbol>
+  <symbol id="ic-cheese" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="48" rx="17" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M15 44 L24 18 L52 34 L52 44Z" fill="#f0c93f" stroke="#d9ac2a" stroke-width="1.5"/>
+    <circle cx="34" cy="32" r="2.4" fill="#fdeaa0"/><circle cx="41" cy="38" r="2" fill="#fdeaa0"/><circle cx="28" cy="38" r="1.8" fill="#fdeaa0"/>
+  </symbol>
+  <symbol id="ic-pasta" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="5" fill="#000" opacity="0.06"/>
+    <path d="M14 40 Q14 22 32 22 Q50 22 50 38 Q50 46 32 46 Q14 46 14 40Z" fill="#f3cd6f"/>
+    <g fill="none" stroke="#e0ac48" stroke-width="2"><path d="M20 36 Q28 28 20 24"/><path d="M28 39 Q38 30 30 22"/><path d="M37 40 Q46 33 39 25"/></g>
+    <circle cx="26" cy="33" r="2.2" fill="#d9503f"/><circle cx="38" cy="35" r="2" fill="#d9503f"/>
+  </symbol>
+  <symbol id="ic-lentils" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="5" fill="#000" opacity="0.06"/>
+    <path d="M14 39 Q14 24 32 23 Q50 24 50 39 Q50 45 32 45 Q14 45 14 39Z" fill="#cf9552"/>
+    <g fill="#b97f3f"><ellipse cx="23" cy="33" rx="3" ry="2"/><ellipse cx="31" cy="29" rx="3" ry="2"/><ellipse cx="40" cy="34" rx="3" ry="2"/><ellipse cx="27" cy="39" rx="3" ry="2"/><ellipse cx="36" cy="40" rx="3" ry="2"/></g>
+  </symbol>
+  <symbol id="ic-chickpeas" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="5" fill="#000" opacity="0.06"/>
+    <path d="M14 39 Q14 24 32 23 Q50 24 50 39 Q50 45 32 45 Q14 45 14 39Z" fill="#eddca0"/>
+    <g fill="#e3cc84" stroke="#c9a959" stroke-width="0.8"><circle cx="23" cy="33" r="3.4"/><circle cx="32" cy="29" r="3.6"/><circle cx="41" cy="34" r="3.4"/><circle cx="27" cy="40" r="3.2"/><circle cx="37" cy="40" r="3.2"/></g>
+  </symbol>
+  <symbol id="ic-coconutmilk" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="50" rx="15" ry="3.5" fill="#000" opacity="0.06"/>
+    <path d="M20 20 L44 20 L42 46 Q32 49 22 46Z" fill="#fbf7ec" stroke="#e6dcc4" stroke-width="1.3"/>
+    <path d="M20 20 L24 12 L40 12 L44 20Z" fill="#e6dcc4"/><circle cx="32" cy="30" r="6" fill="#c9a06a" opacity="0.5"/>
+  </symbol>
+  <symbol id="ic-spinach" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="48" rx="17" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M32 44 Q14 40 16 22 Q26 26 32 44Z" fill="#4a8f4f"/><path d="M32 44 Q50 40 48 22 Q38 26 32 44Z" fill="#5aa15c"/><path d="M32 44 Q28 30 30 16 Q34 30 32 44Z" fill="#3f7e46"/>
+  </symbol>
+  <symbol id="ic-bread" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="4.5" fill="#000" opacity="0.06"/>
+    <path d="M14 44 L14 26 Q14 16 32 16 Q50 16 50 26 L50 44Z" fill="#e8b869" stroke="#c99544" stroke-width="1.5"/>
+    <rect x="14" y="34" width="36" height="10" fill="#f3d59a"/>
+    <g fill="#d9a95e" opacity="0.7"><circle cx="24" cy="27" r="1.6"/><circle cx="34" cy="24" r="1.6"/><circle cx="41" cy="29" r="1.6"/></g>
+  </symbol>
+  <symbol id="ic-tomato" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="49" rx="16" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M32 22 Q46 24 45 36 Q44 48 32 48 Q20 48 19 36 Q18 24 32 22Z" fill="#e4553a"/>
+    <path d="M27 20 Q25 15 20 15 Q24 19 25 22Z" fill="#5f9e5a"/><path d="M37 20 Q39 15 44 15 Q40 19 39 22Z" fill="#6bb877"/><path d="M32 20 L32 16" stroke="#4a7e3f" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Custom icons for ingredients this app doesn't have yet, drawn in the same flat-shape style -->
+  <symbol id="ic-lamb" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="19" ry="5" fill="#000" opacity="0.06"/>
+    <circle cx="24" cy="34" r="9" fill="#b48064"/><circle cx="36" cy="30" r="10" fill="#c99a7c"/><circle cx="40" cy="40" r="8" fill="#b48064"/><circle cx="26" cy="42" r="7" fill="#bc8d6f"/>
+  </symbol>
+  <symbol id="ic-celery" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="49" rx="15" ry="3.5" fill="#000" opacity="0.06"/>
+    <path d="M20 14 Q17 32 22 46" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M32 12 Q29 32 33 48" stroke="#a2c97e" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M44 14 Q42 32 46 46" stroke="#8fbb6e" stroke-width="5" stroke-linecap="round" fill="none"/>
   </symbol>
   <symbol id="ic-squash" viewBox="0 0 64 64">
-    <path d="M27 14 Q22 20 25 26 Q18 30 18 40 Q18 52 32 54 Q46 52 46 40 Q46 30 39 26 Q42 20 37 14 Q34 12 32 15 Q30 12 27 14Z" fill="#e2971f"/>
-    <path d="M32 26 L32 52" stroke="#c67c12" stroke-width="1.3" opacity=".55"/>
-    <path d="M24 30 Q32 34 40 30" stroke="#c67c12" stroke-width="1.1" opacity=".4" fill="none"/>
+    <ellipse cx="32" cy="52" rx="15" ry="3.5" fill="#000" opacity="0.06"/>
+    <path d="M27 14 Q22 20 25 26 Q18 30 18 40 Q18 51 32 53 Q46 51 46 40 Q46 30 39 26 Q42 20 37 14 Q34 12 32 15 Q30 12 27 14Z" fill="#e2971f"/>
+    <path d="M32 26 L32 51" stroke="#c67c12" stroke-width="1.3" opacity=".55"/>
     <path d="M27 14 Q29 11 32 15 Q35 11 37 14" stroke="#6f8f3e" stroke-width="2" fill="none" stroke-linecap="round"/>
   </symbol>
   <symbol id="ic-courgette" viewBox="0 0 64 64">
-    <path d="M12 40 Q10 30 20 26 Q40 18 50 26 Q54 30 50 34 Q34 46 20 46 Q13 46 12 40Z" fill="#4c8a4f"/>
-    <path d="M16 32 Q30 26 46 30" stroke="#3f7440" stroke-width="1.3" opacity=".6" fill="none"/>
-  </symbol>
-  <symbol id="ic-corn" viewBox="0 0 64 64">
-    <path d="M32 12 Q46 16 46 34 Q46 50 32 54 Q18 50 18 34 Q18 16 32 12Z" fill="#f0c93f"/>
-    <g fill="#d9a91f"><circle cx="26" cy="22" r="2"/><circle cx="34" cy="20" r="2"/><circle cx="24" cy="30" r="2"/><circle cx="32" cy="28" r="2"/><circle cx="40" cy="26" r="2"/><circle cx="24" cy="38" r="2"/><circle cx="32" cy="36" r="2"/><circle cx="40" cy="34" r="2"/><circle cx="28" cy="46" r="2"/><circle cx="36" cy="44" r="2"/></g>
-  </symbol>
-  <symbol id="ic-leafy" viewBox="0 0 64 64">
-    <path d="M32 50 Q16 46 18 28 Q26 32 32 50Z" fill="#4a8f4f"/>
-    <path d="M32 50 Q48 46 46 28 Q38 32 32 50Z" fill="#5aa15c"/>
-    <path d="M32 50 Q30 36 32 20 Q35 36 32 50Z" fill="#3f7e46"/>
+    <ellipse cx="32" cy="42" rx="18" ry="4" fill="#000" opacity="0.06"/>
+    <path d="M12 38 Q10 28 20 24 Q40 16 50 24 Q54 28 50 32 Q34 44 20 44 Q13 44 12 38Z" fill="#4c8a4f"/>
+    <path d="M16 30 Q30 24 46 28" stroke="#3f7440" stroke-width="1.3" opacity=".6" fill="none"/>
   </symbol>
   <symbol id="ic-cream" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="53" rx="16" ry="3.5" fill="#000" opacity="0.06"/>
     <rect x="16" y="22" width="32" height="30" rx="3" fill="#fbf6e6" stroke="#d9ac2a" stroke-width="1.3"/>
     <rect x="14" y="16" width="36" height="8" rx="2" fill="#f3e3ae" stroke="#d9ac2a" stroke-width="1.3"/>
   </symbol>
-  <symbol id="ic-cheese" viewBox="0 0 64 64">
-    <path d="M15 44 L24 18 L52 34 L52 44Z" fill="#f0c93f"/>
-    <circle cx="34" cy="32" r="2.4" fill="#fdeaa0"/><circle cx="41" cy="38" r="2" fill="#fdeaa0"/>
-  </symbol>
   <symbol id="ic-milk" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="55" rx="14" ry="3" fill="#000" opacity="0.06"/>
     <path d="M24 12 H40 V20 L46 28 V50 Q46 54 42 54 H22 Q18 54 18 50 V28 L24 20Z" fill="#fbfaf5" stroke="#d8d2bd" stroke-width="1.3"/>
     <rect x="18" y="36" width="28" height="8" fill="#8fb5e0" opacity=".55"/>
   </symbol>
   <symbol id="ic-butter" viewBox="0 0 64 64">
-    <rect x="14" y="24" width="36" height="22" rx="2" fill="#f3d979" stroke="#d9ac2a" stroke-width="1.3"/>
-    <rect x="14" y="24" width="36" height="6" fill="#fbe9c8"/>
+    <ellipse cx="32" cy="48" rx="18" ry="3.5" fill="#000" opacity="0.06"/>
+    <rect x="14" y="24" width="36" height="22" rx="2" fill="#f3d979" stroke="#d9ac2a" stroke-width="1.3"/><rect x="14" y="24" width="36" height="6" fill="#fbe9c8"/>
   </symbol>
   <symbol id="ic-canned" viewBox="0 0 64 64">
-    <rect x="16" y="16" width="32" height="34" rx="3" fill="#c9cdd4"/>
-    <rect x="16" y="27" width="32" height="14" fill="#e0745a"/>
-    <ellipse cx="32" cy="16" rx="16" ry="4" fill="#e4e7eb"/>
-  </symbol>
-  <symbol id="ic-pasta" viewBox="0 0 64 64">
-    <path d="M18 22 Q32 34 18 46 Q26 46 32 40 Q38 46 46 46 Q32 34 46 22 Q38 22 32 28 Q26 22 18 22Z" fill="#e8c469"/>
+    <ellipse cx="32" cy="52" rx="16" ry="3.5" fill="#000" opacity="0.06"/>
+    <rect x="16" y="16" width="32" height="34" rx="3" fill="#c9cdd4"/><rect x="16" y="27" width="32" height="14" fill="#8AA39A"/><ellipse cx="32" cy="16" rx="16" ry="4" fill="#e4e7eb"/>
   </symbol>
   <symbol id="ic-flour" viewBox="0 0 64 64">
-    <path d="M20 18 H44 L46 50 Q46 54 42 54 H22 Q18 54 18 50Z" fill="#fbf6e6" stroke="#d8d2bd" stroke-width="1.3"/>
-    <path d="M20 18 Q32 12 44 18" fill="none" stroke="#d8d2bd" stroke-width="1.3"/>
-  </symbol>
-  <symbol id="ic-lentil" viewBox="0 0 64 64">
-    <path d="M14 34 Q14 46 32 48 Q50 46 50 34 H14Z" fill="#e0d3b0"/>
-    <g fill="#c6472f"><circle cx="24" cy="32" r="2.4"/><circle cx="32" cy="30" r="2.4"/><circle cx="40" cy="33" r="2.4"/><circle cx="28" cy="36" r="2.4"/><circle cx="36" cy="37" r="2.4"/></g>
+    <ellipse cx="32" cy="52" rx="15" ry="3" fill="#000" opacity="0.06"/>
+    <path d="M20 18 H44 L46 50 Q46 54 42 54 H22 Q18 54 18 50Z" fill="#fbf6e6" stroke="#d8d2bd" stroke-width="1.3"/><path d="M20 18 Q32 12 44 18" fill="none" stroke="#d8d2bd" stroke-width="1.3"/>
   </symbol>
   <symbol id="ic-spice" viewBox="0 0 64 64">
-    <rect x="20" y="24" width="24" height="28" rx="3" fill="#eee6d2" stroke="#c9a06a" stroke-width="1.3"/>
-    <rect x="24" y="14" width="16" height="10" rx="2" fill="#c9a06a"/>
-    <g fill="#c6472f"><circle cx="27" cy="34" r="1.6"/><circle cx="34" cy="32" r="1.6"/><circle cx="30" cy="40" r="1.6"/><circle cx="38" cy="40" r="1.6"/></g>
+    <ellipse cx="32" cy="54" rx="13" ry="2.5" fill="#000" opacity="0.06"/>
+    <rect x="20" y="24" width="24" height="28" rx="3" fill="#eee6d2" stroke="#c9a06a" stroke-width="1.3"/><rect x="24" y="14" width="16" height="10" rx="2" fill="#c9a06a"/>
+    <g fill="#e4553a"><circle cx="27" cy="34" r="1.6"/><circle cx="34" cy="32" r="1.6"/><circle cx="30" cy="40" r="1.6"/><circle cx="38" cy="40" r="1.6"/></g>
   </symbol>
   <symbol id="ic-herb" viewBox="0 0 64 64">
-    <path d="M32 14 Q44 18 42 32 Q41 46 32 50 Q23 46 22 32 Q20 18 32 14Z" fill="#5aa15c"/>
-    <line x1="32" y1="16" x2="32" y2="48" stroke="#3f7e46" stroke-width="1.3"/>
+    <ellipse cx="32" cy="53" rx="13" ry="2.5" fill="#000" opacity="0.06"/>
+    <path d="M32 14 Q44 18 42 32 Q41 46 32 50 Q23 46 22 32 Q20 18 32 14Z" fill="#5aa15c"/><line x1="32" y1="16" x2="32" y2="48" stroke="#3f7e46" stroke-width="1.3"/>
   </symbol>
   <symbol id="ic-stockcube" viewBox="0 0 64 64">
-    <rect x="16" y="22" width="28" height="28" rx="2" fill="#d9ac2a"/>
-    <path d="M16 22 L24 14 H52 L44 22Z" fill="#eec766"/>
-    <path d="M44 22 L52 14 V42 L44 50Z" fill="#c69622"/>
+    <ellipse cx="32" cy="53" rx="15" ry="3" fill="#000" opacity="0.06"/>
+    <rect x="16" y="22" width="28" height="28" rx="2" fill="#d9ac2a"/><path d="M16 22 L24 14 H52 L44 22Z" fill="#eec766"/><path d="M44 22 L52 14 V42 L44 50Z" fill="#c69622"/>
   </symbol>
   <symbol id="ic-oil" viewBox="0 0 64 64">
-    <path d="M27 12 H37 V20 L42 26 V50 Q42 54 38 54 H26 Q22 54 22 50 V26 L27 20Z" fill="#e2971f" opacity=".85"/>
-    <rect x="27" y="12" width="10" height="6" fill="#8c5a78"/>
-  </symbol>
-  <symbol id="ic-bread" viewBox="0 0 64 64">
-    <ellipse cx="32" cy="34" rx="22" ry="16" fill="#e8b869"/>
-    <ellipse cx="32" cy="34" rx="22" ry="16" fill="none" stroke="#c9902f" stroke-width="1.3" opacity=".6"/>
-    <g stroke="#c9902f" stroke-width="1" opacity=".5"><path d="M18 30 Q32 34 46 30"/><path d="M18 38 Q32 42 46 38"/></g>
+    <ellipse cx="32" cy="53" rx="12" ry="2.5" fill="#000" opacity="0.06"/>
+    <path d="M27 12 H37 V20 L42 26 V50 Q42 54 38 54 H26 Q22 54 22 50 V26 L27 20Z" fill="#e2971f" opacity=".85"/><rect x="27" y="12" width="10" height="6" fill="#8c5a78"/>
   </symbol>
   <symbol id="ic-sauce" viewBox="0 0 64 64">
-    <path d="M27 12 H37 V18 L41 24 V50 Q41 54 37 54 H27 Q23 54 23 50 V24 L27 18Z" fill="#6f4a2f"/>
-    <rect x="27" y="12" width="10" height="5" fill="#3a2a1a"/>
+    <ellipse cx="32" cy="53" rx="12" ry="2.5" fill="#000" opacity="0.06"/>
+    <path d="M27 12 H37 V18 L41 24 V50 Q41 54 37 54 H27 Q23 54 23 50 V24 L27 18Z" fill="#6f4a2f"/><rect x="27" y="12" width="10" height="5" fill="#3a2a1a"/>
   </symbol>
   <symbol id="ic-raisin" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="47" rx="15" ry="3" fill="#000" opacity="0.06"/>
     <g fill="#4a3324"><ellipse cx="26" cy="28" rx="6" ry="7"/><ellipse cx="40" cy="30" rx="6" ry="7"/><ellipse cx="32" cy="42" rx="6" ry="7"/></g>
   </symbol>
-  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-  <symbol id="ic-active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></symbol>
-  <symbol id="ic-servings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2 20c0-3.5 2.7-6 6-6s6 2.5 6 6M13 20c0-2.8 1.8-5 4.5-5s4.5 2.2 4.5 5"/></symbol>
-  <symbol id="ic-difficulty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h4M10 19h4M16 19h4" stroke-linecap="round"/><path d="M6 19V9M12 19V5M18 19v13" stroke-linecap="round"/></symbol>
-  <symbol id="ic-slowcooker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M4 10a8 4 0 0116 0"/></symbol>
-  <symbol id="ic-bowl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h16l-2 9a2 2 0 01-2 2H8a2 2 0 01-2-2L4 10z"/><path d="M8 10a4 4 0 018 0"/></symbol>
-  <symbol id="ic-masher" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13M8 12l4 4 4-4"/><path d="M5 21h14"/></symbol>
-  <symbol id="ic-fryingpan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="13" r="7"/><path d="M17 9l5-4"/></symbol>
-  <symbol id="ic-jug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h7l2 5v9a2 2 0 01-2 2H9a2 2 0 01-2-2V4z"/><path d="M16 9h2a2 2 0 012 2v3a2 2 0 01-2 2h-1"/></symbol>
-  <symbol id="ic-kettle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="3" width="6" height="15" rx="2"/><path d="M8 21h8"/></symbol>
-  <symbol id="ic-grater" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="16" rx="2"/><path d="M9 7l2 2M9 11l2 2M9 15l2 2M13 7l2 2M13 11l2 2M13 15l2 2" stroke-linecap="round"/></symbol>
-  <symbol id="ic-blender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16M6 10l6-6 6 6"/></symbol>
 </defs>
 </svg>
 
@@ -270,84 +275,33 @@
   <div class="intro">
     <p class="kicker">Batch cook · slow cooker set</p>
     <h1>Seven slow cooker dinners, rejigged to shop as one</h1>
-    <p>Scanned from the cookbook, then tweaked so they draw from the same stock cubes, cheese, oil and squash instead of seven separate shopping trips. Tap a recipe to see ingredients first, then step through the method one screen at a time.</p>
+    <p>Scanned from the cookbook, then tweaked so they draw from the same stock cubes, cheese, oil and squash instead of seven separate shopping trips. Tap "Cook with me" on any recipe — ingredients first, then step through the method one screen at a time.</p>
   </div>
 
-  <div class="tile-grid" id="tile-grid"></div>
+  <div class="section-block">
+    <h3>Dinner</h3>
+    <div class="card-grid" id="card-grid"></div>
+  </div>
+
+  <div class="shop-banner">
+    <div>
+      <h3>Combined Shopping List</h3>
+      <p>All seven recipes, quantities totalled up and shared where possible</p>
+    </div>
+    <button type="button" class="btn" id="shop-open-btn">View list</button>
+  </div>
+
+  <p class="footer-note">Recipes adapted from a slow-cooker cookbook and rejigged for shared shopping · Cook Mode matches Plateful's own recipe flow</p>
 
 </div>
 
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-shell">
-    <button type="button" class="modal-close" id="modal-close" aria-label="Close">&times;</button>
-
-    <div id="modal-recipe" hidden>
-      <div class="card-head">
-        <h2 id="modal-title"></h2>
-        <p class="sub" id="modal-sub"></p>
-        <div class="stats" id="modal-stats"></div>
-      </div>
-      <div class="modal-tabs">
-        <button type="button" class="modal-tab" data-view="ingredients">Ingredients</button>
-        <button type="button" class="modal-tab" data-view="steps">Steps</button>
-      </div>
-      <div class="modal-view" data-view="ingredients">
-        <div class="section">
-          <div class="section-head"><h3>Ingredients</h3><span class="count" id="modal-ing-count"></span></div>
-          <div class="ing-grid" id="modal-ing-grid"></div>
-          <div class="not-included" id="modal-not-included"></div>
-        </div>
-        <div class="section">
-          <div class="section-head"><h3>Utensils</h3></div>
-          <div class="utensils" id="modal-utensils"></div>
-        </div>
-      </div>
-      <div class="modal-view" data-view="steps">
-        <div class="step-section">
-          <div class="step-progress" id="step-progress"></div>
-          <div id="step-slide"></div>
-          <div class="step-controls">
-            <button type="button" id="step-prev">&larr; Back</button>
-            <div class="step-dots" id="step-dots"></div>
-            <button type="button" id="step-next" class="primary">Next &rarr;</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="modal-shop" hidden>
-      <div class="card-head">
-        <h2>Combined Shopping List</h2>
-        <p class="sub">all seven recipes, quantities totalled up and shared where possible</p>
-      </div>
-      <div class="section">
-        <div class="section-head"><h3>Meat</h3><span class="count">3 items</span></div>
-        <p class="shop-intro">Chicken thighs are boneless &amp; skinless in both recipes — buy as one 1.1kg pack.</p>
-        <div id="shop-meat"></div>
-      </div>
-      <div class="section">
-        <div class="section-head"><h3>Fridge</h3><span class="count">4 items</span></div>
-        <div id="shop-fridge"></div>
-      </div>
-      <div class="section">
-        <div class="section-head"><h3>Fruit &amp; Veg</h3><span class="count">9 items</span></div>
-        <p class="shop-intro">One large squash (~1.6–1.8kg) covers both squash recipes — split roughly 800g-1kg for the pasta, the rest (~700-800g) for the Dahl.</p>
-        <div id="shop-veg"></div>
-      </div>
-      <div class="section">
-        <div class="section-head"><h3>Store Cupboard</h3><span class="count">18 items</span></div>
-        <p class="shop-intro">Stock cubes are vegetable throughout, so one box covers all seven recipes — 10 cubes needed in total.</p>
-        <div id="shop-cupboard"></div>
-      </div>
-      <div class="section">
-        <p class="footer-note" style="margin-top:0;text-align:left;">Tap an item to check it off — that's saved on this device only, so it resets if you clear browser data or open this page somewhere else.</p>
-      </div>
-    </div>
+<!-- ================= COOK MODE (mirrors meal-builder-prototype.html) ================= -->
+<div class="cook-overlay" id="cookOverlay">
+  <div class="cook-modal">
+    <button type="button" class="cook-close" id="cookCloseBtn" aria-label="Close">&times;</button>
+    <p class="cook-swipe-hint">&lsaquo; swipe to move between steps &rsaquo;</p>
+    <div id="cookContent"></div>
   </div>
-</div>
-
-<div class="wrap" style="padding-top:0;">
-  <p class="footer-note">Recipes adapted from a slow-cooker cookbook and rejigged for shared shopping · card format matches Plateful's own recipe cards</p>
 </div>
 
 <script>
@@ -356,18 +310,18 @@ var RECIPES = [
     id: 'spanish-chicken-sweetcorn-stew',
     name: 'Spanish Chicken &amp; Sweetcorn Stew',
     sub: 'with smoky paprika, sweetcorn &amp; mashed cannellini beans',
-    stats: { total:'3–6 hrs', active:'5 min', servings:'3 adults + 2 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '5 min', timeTotal: '3–6 hrs', servings: '3 adults + 2 littles',
     ingredients: [
       {icon:'canned', name:'Cannellini or haricot beans', qty:'400g can'},
-      {icon:'poultry', name:'Chicken thighs, boneless &amp; skinless', qty:'500g'},
+      {icon:'chicken', name:'Chicken thighs, boneless &amp; skinless', qty:'500g'},
       {icon:'corn', name:'Frozen sweetcorn kernels', qty:'300g'},
-      {icon:'canned', name:'Passata', qty:'500g'},
+      {icon:'tomato', name:'Passata', qty:'500g'},
       {icon:'spice', name:'Smoked paprika', qty:'3 tsp'},
-      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'<b>Contains:</b> Celery'},
+      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'Contains: Celery'},
       {icon:'garlic', name:'Garlic cloves', qty:'2'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'bowl', label:'Mixing bowl'}, {icon:'masher', label:'Potato masher'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Mixing bowl'}, {label:'Potato masher'} ],
     steps: [
       {title:'Mash the beans', body:"Rinse the <b>beans</b> and mash with a potato masher in a bowl until none are left whole, then tip into the slow cooker with the rest of the ingredients."},
       {title:'Rinse out the passata', body:"Half-fill the empty <b>passata</b> carton with cold water, swill out the corners, and add that to the pot too — it keeps every bit of sauce out of the bin."},
@@ -379,26 +333,26 @@ var RECIPES = [
     id: 'proper-beef-stew-dumplings',
     name: 'Proper Beef Stew &amp; Dumplings',
     sub: 'with cheesy suet dumplings',
-    stats: { total:'4–8 hrs', active:'20 min', servings:'2 adults + 3 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '20 min', timeTotal: '4–8 hrs', servings: '2 adults + 3 littles',
     ingredients: [
-      {icon:'redmeat', name:'Stewing beef, diced lean', qty:'750g'},
+      {icon:'beef', name:'Stewing beef, diced lean', qty:'750g'},
       {icon:'celery', name:'Celery sticks', qty:'5'},
       {icon:'onion', name:'Onion', qty:'1'},
       {icon:'carrot', name:'Carrots, small', qty:'3'},
       {icon:'oil', name:'Sunflower oil', qty:'2 tbsp'},
-      {icon:'flour', name:'Plain flour', qty:'2 tbsp', allergen:'<b>Contains:</b> Wheat, Gluten'},
+      {icon:'flour', name:'Plain flour', qty:'2 tbsp', allergen:'Contains: Wheat, Gluten'},
       {icon:'potato', name:'Potatoes, large', qty:'2'},
-      {icon:'sauce', name:'Worcestershire sauce (optional)', qty:'1 tbsp', allergen:'<b>Contains:</b> Fish'},
+      {icon:'sauce', name:'Worcestershire sauce (optional)', qty:'1 tbsp', allergen:'Contains: Fish'},
       {icon:'herb', name:'Bay leaves', qty:'2'},
       {icon:'garlic', name:'Garlic cloves', qty:'3'},
       {icon:'herb', name:'Dried mixed herbs', qty:'1 tsp'},
-      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'<b>Contains:</b> Celery'},
-      {icon:'flour', name:'Self-raising flour, for dumplings', qty:'200g', allergen:'<b>Contains:</b> Wheat, Gluten'},
-      {icon:'butter', name:'Suet, beef or vegetarian', qty:'70g', allergen:'<i>may contain Wheat</i>'},
-      {icon:'cheese', name:'Smoked Cheddar', qty:'50g', allergen:'<b>Contains:</b> Milk'}
+      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'Contains: Celery'},
+      {icon:'flour', name:'Self-raising flour, for dumplings', qty:'200g', allergen:'Contains: Wheat, Gluten'},
+      {icon:'butter', name:'Suet, beef or vegetarian', qty:'70g', allergen:'may contain Wheat'},
+      {icon:'cheese', name:'Smoked Cheddar', qty:'50g', allergen:'Contains: Milk'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'fryingpan', label:'Frying pan'}, {icon:'bowl', label:'Mixing bowl'}, {icon:'jug', label:'Jug'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Frying pan'}, {label:'Mixing bowl'}, {label:'Jug'} ],
     steps: [
       {title:'Soften the veg', body:"Finely dice the <b>celery</b>, <b>onion</b> and <b>carrots</b>. Cook in a large frying pan with a little oil for about 5 minutes until starting to soften, then tip into the slow cooker."},
       {title:'Flour and brown the beef', body:"Coat the <b>beef</b> in the <b>flour</b>, shaking off the excess, and peel &amp; quarter the <b>potatoes</b>. Brown the beef in batches in the same hot pan until dark and crispy outside, then add to the slow cooker too."},
@@ -411,23 +365,23 @@ var RECIPES = [
     id: 'lamb-tagine',
     name: 'Lamb Tagine',
     sub: 'with chickpeas, cumin &amp; cinnamon',
-    stats: { total:'4–7 hrs', active:'10 min', servings:'2 adults + 3 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '10 min', timeTotal: '4–7 hrs', servings: '2 adults + 3 littles',
     ingredients: [
-      {icon:'redmeat', name:'Lamb shoulder, diced', qty:'750g'},
+      {icon:'lamb', name:'Lamb shoulder, diced', qty:'750g'},
       {icon:'oil', name:'Sunflower oil', qty:'2 tbsp'},
       {icon:'onion', name:'Onion, large', qty:'1'},
       {icon:'carrot', name:'Carrots, large', qty:'3'},
       {icon:'spice', name:'Ground cumin', qty:'2 tsp'},
       {icon:'spice', name:'Sweet paprika', qty:'2 tsp'},
-      {icon:'canned', name:'Chickpeas, drained', qty:'400g can'},
-      {icon:'canned', name:'Chopped tomatoes', qty:'400g can'},
-      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'<b>Contains:</b> Celery'},
+      {icon:'chickpeas', name:'Chickpeas, drained', qty:'400g can'},
+      {icon:'tomato', name:'Chopped tomatoes', qty:'400g can'},
+      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'Contains: Celery'},
       {icon:'garlic', name:'Garlic cloves, large', qty:'2'},
       {icon:'spice', name:'Ground cinnamon', qty:'½ tsp'},
       {icon:'raisin', name:'Raisins (optional)', qty:'a handful'}
     ],
     notIncluded: 'black pepper, fresh herbs to garnish (optional)',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'fryingpan', label:'Frying pan'}, {icon:'kettle', label:'Kettle'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Frying pan'}, {label:'Kettle'} ],
     steps: [
       {title:'Brown the lamb in batches', body:"Heat 1 tbsp oil in a large frying pan over high heat. Fry half the <b>lamb</b> in a single layer for 2 minutes until browned, turn for another 1–2 minutes, then move to the slow cooker. Repeat with the rest."},
       {title:'Add the aromatics', body:"Grate or finely dice the <b>onion</b>, peel and chunk the <b>carrots</b>, and add both to the slow cooker with the <b>cumin</b>, <b>paprika</b>, <b>chickpeas</b>, <b>tomatoes</b>, <b>stock cubes</b>, <b>garlic</b>, <b>cinnamon</b> and <b>raisins</b>.", callout:{kind:'tip', text:"Deglaze the empty hot frying pan with 400ml boiling water, scraping up the browned bits, then pour that into the pot too — that's where a lot of the flavour is hiding."}},
@@ -439,7 +393,7 @@ var RECIPES = [
     id: 'coconut-potato-curry',
     name: 'Coconut Potato Curry',
     sub: 'with spinach &amp; flatbread',
-    stats: { total:'3½–6 hrs', active:'10 min', servings:'2 adults + 2 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '10 min', timeTotal: '3½–6 hrs', servings: '2 adults + 2 littles',
     ingredients: [
       {icon:'potato', name:'Potatoes, all-rounder (e.g. Maris Piper)', qty:'1kg'},
       {icon:'onion', name:'Onion, large', qty:'1'},
@@ -448,13 +402,13 @@ var RECIPES = [
       {icon:'sauce', name:'Tomato purée', qty:'2 tbsp'},
       {icon:'spice', name:'Garam masala', qty:'2 tsp'},
       {icon:'spice', name:'Mild curry powder', qty:'1 tbsp'},
-      {icon:'canned', name:'Coconut milk', qty:'400g can', allergen:'<b>Contains:</b> Coconut'},
-      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'<b>Contains:</b> Celery'},
-      {icon:'leafy', name:'Frozen spinach', qty:'200g'},
-      {icon:'bread', name:'Flatbreads, to serve', qty:'3–4', allergen:'<b>Contains:</b> Wheat, Gluten'}
+      {icon:'coconutmilk', name:'Coconut milk', qty:'400g can', allergen:'Contains: Coconut'},
+      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'Contains: Celery'},
+      {icon:'spinach', name:'Frozen spinach', qty:'200g'},
+      {icon:'bread', name:'Flatbreads, to serve', qty:'3–4', allergen:'Contains: Wheat, Gluten'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'kettle', label:'Kettle'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Kettle'} ],
     steps: [
       {title:'Soften the base', body:"Peel and grate (or finely dice) the <b>onion</b>, and finely grate the <b>garlic</b>. Add both to the slow cooker with the <b>oil</b>, stir, lid on, and cook 10–15 minutes on HIGH."},
       {title:'Add the spice paste', body:"Stir in the <b>tomato purée</b>, <b>garam masala</b> and <b>curry powder</b>. Lid back on for a further 10 minutes, until the kitchen smells aromatic."},
@@ -467,20 +421,20 @@ var RECIPES = [
     id: 'chicken-kyiv-pasta',
     name: 'Chicken Kyiv Pasta',
     sub: 'a creamy one-pot take on the 1970s classic',
-    stats: { total:'4–7 hrs', active:'5 min', servings:'2 adults + 2 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '5 min', timeTotal: '4–7 hrs', servings: '2 adults + 2 littles',
     ingredients: [
-      {icon:'poultry', name:'Chicken thighs, boneless &amp; skinless', qty:'600g'},
+      {icon:'chicken', name:'Chicken thighs, boneless &amp; skinless', qty:'600g'},
       {icon:'courgette', name:'Courgette, finely grated', qty:'1 large'},
       {icon:'garlic', name:'Garlic cloves', qty:'3'},
-      {icon:'butter', name:'Butter', qty:'25g', allergen:'<b>Contains:</b> Milk'},
-      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'<b>Contains:</b> Celery'},
-      {icon:'cream', name:'Cream cheese', qty:'150g', allergen:'<b>Contains:</b> Milk'},
-      {icon:'milk', name:'Milk', qty:'150ml', allergen:'<b>Contains:</b> Milk'},
-      {icon:'pasta', name:'Pasta', qty:'250g', allergen:'<b>Contains:</b> Wheat, Gluten — <i>may contain Egg</i>'},
-      {icon:'cheese', name:'Smoked Cheddar, grated (optional)', qty:'50g', allergen:'<b>Contains:</b> Milk'}
+      {icon:'butter', name:'Butter', qty:'25g', allergen:'Contains: Milk'},
+      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'Contains: Celery'},
+      {icon:'cream', name:'Cream cheese', qty:'150g', allergen:'Contains: Milk'},
+      {icon:'milk', name:'Milk', qty:'150ml', allergen:'Contains: Milk'},
+      {icon:'pasta', name:'Pasta', qty:'250g', allergen:'Contains: Wheat, Gluten — may contain Egg'},
+      {icon:'cheese', name:'Smoked Cheddar, grated (optional)', qty:'50g', allergen:'Contains: Milk'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'grater', label:'Box grater'}, {icon:'bowl', label:'Small bowl'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Box grater'}, {label:'Small bowl'} ],
     steps: [
       {title:'Load the pot', body:"Add the <b>chicken thighs</b>, grated <b>courgette</b>, <b>garlic</b>, a good grinding of pepper, and the <b>butter</b> to the slow cooker."},
       {title:'Cook until tender', body:"Dissolve the <b>stock cube</b> in 550ml boiling water and add to the pot. Stir well so the chicken is submerged, lid on, and cook HIGH for 3 hours or LOW for 6 hours."},
@@ -492,20 +446,20 @@ var RECIPES = [
     id: 'creamy-butternut-squash-pasta',
     name: 'Creamy Butternut Squash Pasta',
     sub: 'a smoky, veg-packed sauce even fussy eaters go for',
-    stats: { total:'3½–6½ hrs', active:'10 min', servings:'2 adults + 3 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '10 min', timeTotal: '3½–6½ hrs', servings: '2 adults + 3 littles',
     ingredients: [
-      {icon:'squash', name:'Butternut squash, chopped', qty:'800g–1kg', allergen:'<i>from the same squash as the Dahl — see shopping list</i>'},
+      {icon:'squash', name:'Butternut squash, chopped', qty:'800g–1kg', allergen:'from the same squash as the Dahl — see shopping list'},
       {icon:'onion', name:'Onion', qty:'1'},
       {icon:'garlic', name:'Garlic cloves, large', qty:'3'},
-      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'<b>Contains:</b> Celery'},
-      {icon:'pasta', name:'Pasta', qty:'220g', allergen:'<b>Contains:</b> Wheat, Gluten'},
-      {icon:'milk', name:'Milk', qty:'200ml', allergen:'<b>Contains:</b> Milk'},
-      {icon:'cream', name:'Cream cheese', qty:'100g', allergen:'<b>Contains:</b> Milk'},
-      {icon:'cheese', name:'Smoked Cheddar, grated', qty:'90g', allergen:'<b>Contains:</b> Milk'},
+      {icon:'stockcube', name:'Vegetable stock cube', qty:'1', allergen:'Contains: Celery'},
+      {icon:'pasta', name:'Pasta', qty:'220g', allergen:'Contains: Wheat, Gluten'},
+      {icon:'milk', name:'Milk', qty:'200ml', allergen:'Contains: Milk'},
+      {icon:'cream', name:'Cream cheese', qty:'100g', allergen:'Contains: Milk'},
+      {icon:'cheese', name:'Smoked Cheddar, grated', qty:'90g', allergen:'Contains: Milk'},
       {icon:'spice', name:'Smoked paprika', qty:'2 tsp'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'}, {icon:'blender', label:'Stick blender'}, {icon:'kettle', label:'Kettle'} ],
+    utensils: [ {label:'Slow cooker'}, {label:'Stick blender'}, {label:'Kettle'} ],
     steps: [
       {title:'Cook the squash', body:"Add the chopped <b>butternut squash</b>, <b>onion</b> and <b>garlic</b> to the slow cooker with a grinding of pepper. Crumble in the <b>stock cube</b>, add 500ml boiling water, stir, lid on, and cook 3 hours on HIGH or 5–6 hours on LOW until very tender."},
       {title:'Blend to a purée', body:"Blend the veg and cooking liquid until very smooth, with a stick blender or in a food processor, then pour back into the slow cooker."},
@@ -517,23 +471,23 @@ var RECIPES = [
     id: 'chickpea-butternut-squash-dahl',
     name: 'Chickpea &amp; Butternut Squash Dahl',
     sub: 'a creamy, protein-packed vegan dahl',
-    stats: { total:'3–8 hrs', active:'5 min', servings:'2 adults + 3 littles', difficulty:'Easy' },
+    difficulty: 'Easy', timeActive: '5 min', timeTotal: '3–8 hrs', servings: '2 adults + 3 littles',
     ingredients: [
-      {icon:'squash', name:'Butternut squash, diced', qty:'700–800g', allergen:'<i>from the same squash as the pasta — see shopping list</i>'},
-      {icon:'canned', name:'Chickpeas, with their water', qty:'400g can'},
-      {icon:'lentil', name:'Dried red lentils, rinsed', qty:'300g'},
-      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'<b>Contains:</b> Celery'},
+      {icon:'squash', name:'Butternut squash, diced', qty:'700–800g', allergen:'from the same squash as the pasta — see shopping list'},
+      {icon:'chickpeas', name:'Chickpeas, with their water', qty:'400g can'},
+      {icon:'lentils', name:'Dried red lentils, rinsed', qty:'300g'},
+      {icon:'stockcube', name:'Vegetable stock cubes', qty:'2', allergen:'Contains: Celery'},
       {icon:'spice', name:'Garam masala', qty:'1 tbsp'},
       {icon:'spice', name:'Mild curry powder', qty:'1 tbsp'},
       {icon:'herb', name:'Dried mixed herbs', qty:'2 tsp'},
       {icon:'spice', name:'Smoked paprika', qty:'2 tsp'},
-      {icon:'canned', name:'Coconut milk', qty:'400g can', allergen:'<b>Contains:</b> Coconut'},
-      {icon:'canned', name:'Chopped tomatoes', qty:'400g can'},
+      {icon:'coconutmilk', name:'Coconut milk', qty:'400g can', allergen:'Contains: Coconut'},
+      {icon:'tomato', name:'Chopped tomatoes', qty:'400g can'},
       {icon:'onion', name:'Onion, finely diced', qty:'1'},
       {icon:'garlic', name:'Garlic cloves, grated', qty:'2'}
     ],
     notIncluded: 'black pepper',
-    utensils: [ {icon:'slowcooker', label:'Slow cooker'} ],
+    utensils: [ {label:'Slow cooker'} ],
     steps: [
       {title:'Everything in one pot', body:"Put all the ingredients into the slow cooker, including the water from the <b>chickpea</b> tin, along with 350ml boiling water. Give it a really good stir."},
       {title:'Cook low and slow', body:"Lid on, and cook 3–4 hours on HIGH or 6–8 hours on LOW."},
@@ -543,138 +497,19 @@ var RECIPES = [
   }
 ];
 
-(function(){
-  var overlay = document.getElementById('modal-overlay');
-  var modalRecipe = document.getElementById('modal-recipe');
-  var modalShop = document.getElementById('modal-shop');
-  var currentRecipe = null, currentStep = 0;
-
-  function tileStat(iconId, value){
-    return '<span class="tile-stat"><svg><use href="#ic-' + iconId + '"/></svg>' + value + '</span>';
-  }
-  function statChip(iconId, label, value){
-    return '<div class="stat"><div class="k"><svg><use href="#ic-' + iconId + '"/></svg>' + label + '</div><div class="v">' + value + '</div></div>';
-  }
-
-  function renderTiles(){
-    var grid = document.getElementById('tile-grid');
-    var html = RECIPES.map(function(r){
-      return '<button type="button" class="tile" data-open="' + r.id + '">' +
-          '<h3>' + r.name + '</h3><p class="tile-sub">' + r.sub + '</p>' +
-          '<div class="tile-stats">' +
-            tileStat('clock', r.stats.total) + tileStat('active', r.stats.active) +
-            tileStat('servings', r.stats.servings) + tileStat('difficulty', r.stats.difficulty) +
-          '</div>' +
-        '</button>';
-    }).join('') +
-    '<button type="button" class="tile shop-tile" data-open="shopping-list">' +
-      '<h3>Shopping List</h3><p class="tile-sub">Everything from all seven recipes, totalled up and shared where possible</p>' +
-    '</button>';
-    grid.innerHTML = html;
-    grid.querySelectorAll('.tile').forEach(function(t){
-      t.addEventListener('click', function(){ openModal(t.dataset.open); });
-    });
-  }
-
-  function showView(view){
-    document.querySelectorAll('.modal-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.view === view); });
-    document.querySelectorAll('.modal-view').forEach(function(v){ v.classList.toggle('active', v.dataset.view === view); });
-  }
-
-  function renderIngredients(r){
-    document.getElementById('modal-ing-count').textContent = r.ingredients.length + ' items';
-    document.getElementById('modal-ing-grid').innerHTML = r.ingredients.map(function(ing){
-      return '<div class="ing-row"><div class="ing-icon"><svg><use href="#ic-' + ing.icon + '"/></svg></div><div><div class="ing-name">' + ing.name + '</div>' +
-        (ing.allergen ? '<div class="ing-allergen">' + ing.allergen + '</div>' : '') +
-        '</div><div class="ing-qty">' + ing.qty + '</div></div>';
-    }).join('');
-    document.getElementById('modal-not-included').innerHTML = '<b>Not included:</b> ' + r.notIncluded;
-    document.getElementById('modal-utensils').innerHTML = r.utensils.map(function(u){
-      return '<div class="utensil"><svg><use href="#ic-' + u.icon + '"/></svg>' + u.label + '</div>';
-    }).join('');
-  }
-
-  function renderStep(){
-    var r = currentRecipe, s = r.steps[currentStep];
-    document.getElementById('step-progress').textContent = 'Step ' + (currentStep + 1) + ' of ' + r.steps.length;
-    document.getElementById('step-slide').innerHTML =
-      '<div class="step"><div class="step-num">' + (currentStep + 1) + '</div><div class="step-body">' +
-        '<h4>' + s.title + '</h4><p>' + s.body + '</p>' +
-        (s.callout ? '<p><span class="callout ' + s.callout.kind + '">' + (s.callout.kind === 'tip' ? 'TIP' : 'IMPORTANT') + ':</span> <span class="callout-text">' + s.callout.text + '</span></p>' : '') +
-      '</div></div>';
-    document.getElementById('step-dots').innerHTML = r.steps.map(function(_, i){
-      return '<span class="step-dot' + (i === currentStep ? ' active' : '') + '"></span>';
-    }).join('');
-    document.getElementById('step-prev').disabled = currentStep === 0;
-    document.getElementById('step-next').disabled = currentStep === r.steps.length - 1;
-  }
-
-  function openModal(id){
-    if (id === 'shopping-list'){ openShop(); return; }
-    var r = RECIPES.find(function(x){ return x.id === id; });
-    if (!r) return;
-    currentRecipe = r; currentStep = 0;
-    document.getElementById('modal-title').innerHTML = r.name;
-    document.getElementById('modal-sub').innerHTML = r.sub;
-    document.getElementById('modal-stats').innerHTML =
-      statChip('clock', 'Total', r.stats.total) + statChip('active', 'Active', r.stats.active) +
-      statChip('servings', 'Serves', r.stats.servings) + statChip('difficulty', 'Difficulty', r.stats.difficulty);
-    renderIngredients(r);
-    renderStep();
-    showView('ingredients');
-    modalRecipe.hidden = false;
-    modalShop.hidden = true;
-    open();
-  }
-
-  function openShop(){
-    modalRecipe.hidden = true;
-    modalShop.hidden = false;
-    open();
-  }
-
-  function open(){
-    overlay.classList.add('open');
-    overlay.scrollTop = 0;
-    document.body.classList.add('modal-open');
-  }
-  function closeModal(){
-    overlay.classList.remove('open');
-    document.body.classList.remove('modal-open');
-  }
-
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
-
-  document.querySelectorAll('.modal-tab').forEach(function(tab){
-    tab.addEventListener('click', function(){ showView(tab.dataset.view); });
-  });
-  document.getElementById('step-prev').addEventListener('click', function(){
-    if (currentStep > 0){ currentStep--; renderStep(); }
-  });
-  document.getElementById('step-next').addEventListener('click', function(){
-    if (currentStep < currentRecipe.steps.length - 1){ currentStep++; renderStep(); }
-  });
-
-  renderTiles();
-})();
-
-(function(){
-  var STORAGE_KEY = 'slow-cooker-cards-shop-checked';
-
-  var MEAT = [
+var SHOP = [
+  { cat:'Meat', note:'Chicken thighs are boneless &amp; skinless in both recipes — buy as one 1.1kg pack.', items:[
     ['Boneless, skinless chicken thighs', '1.1kg total (500g + 600g)'],
     ['Diced stewing beef', '750g'],
     ['Diced lamb shoulder', '750g']
-  ];
-  var FRIDGE = [
+  ]},
+  { cat:'Fridge', items:[
     ['Cream cheese', 'one ~300g tub (150g + 100g)'],
     ['Smoked Cheddar', 'one ~200-250g block (50g + 50g + 90g)'],
     ['Milk', '~350ml (150ml + 200ml)'],
     ['Butter', '25g']
-  ];
-  var VEG = [
+  ]},
+  { cat:'Fruit &amp; Veg', note:'One large squash (~1.6–1.8kg) covers both squash recipes — split roughly 800g-1kg for the pasta, the rest (~700-800g) for the Dahl.', items:[
     ['Onions', '5, net bag'],
     ['Garlic', '2 bulbs (~17 cloves needed)'],
     ['Butternut squash', '1 large, ~1.6-1.8kg'],
@@ -684,8 +519,8 @@ var RECIPES = [
     ['Courgette', '1 large'],
     ['Frozen sweetcorn', '300g'],
     ['Frozen spinach', '200g']
-  ];
-  var CUPBOARD = [
+  ]},
+  { cat:'Store Cupboard', note:'Stock cubes are vegetable throughout, so one box covers all seven recipes — 10 cubes needed in total.', items:[
     ['Low-salt vegetable stock cubes', 'one box (10 cubes needed)'],
     ['Cannellini or haricot beans', '1 x 400g can'],
     ['Chickpeas', '2 x 400g cans'],
@@ -704,39 +539,157 @@ var RECIPES = [
     ['Dried mixed herbs, bay leaves', 'a few tsp + 2 leaves'],
     ['Worcestershire sauce, tomato purée, raisins', 'small amounts, optional/pantry'],
     ['Flatbreads', '3-4, to serve']
-  ];
+  ]}
+];
 
-  function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+(function(){
+  var overlay = document.getElementById('cookOverlay');
+  var content = document.getElementById('cookContent');
+  var cookMode = null; // { recipe, step } for a recipe, or { shop:true } for the shopping list
 
-  function render(containerId, items){
-    var el = document.getElementById(containerId);
+  function svgIcon(key, size){
+    var style = size ? ' style="width:' + size + 'px;height:' + size + 'px"' : '';
+    return '<svg class="food-icon"' + style + ' viewBox="0 0 64 64"><use href="#ic-' + key + '"></use></svg>';
+  }
+
+  function renderCards(){
+    var grid = document.getElementById('card-grid');
+    grid.innerHTML = RECIPES.map(function(r){
+      return '<div class="rcard">' +
+        '<div class="rcard-top"><span class="rcard-diff">' + r.difficulty + '</span><span class="rcard-time">&#9201; ' + r.timeActive + ' active &middot; ' + r.timeTotal + ' total</span></div>' +
+        '<div class="card-name">' + r.name + '</div>' +
+        '<div class="card-sub">' + r.sub + '</div>' +
+        '<div class="card-icons">' + r.ingredients.map(function(i){ return svgIcon(i.icon); }).join('') + '</div>' +
+        '<div class="card-macros"><span>Serves <b>' + r.servings + '</b></span></div>' +
+        '<div class="card-actions"><button type="button" class="btn accent" data-id="' + r.id + '">Cook with me</button></div>' +
+      '</div>';
+    }).join('');
+    grid.querySelectorAll('[data-id]').forEach(function(btn){
+      btn.addEventListener('click', function(){ openCookRecipe(btn.dataset.id); });
+    });
+  }
+
+  function openOverlay(){
+    overlay.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
+  function closeCook(){
+    cookMode = null;
+    overlay.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+
+  function openCookRecipe(id){
+    var r = RECIPES.find(function(x){ return x.id === id; });
+    if (!r) return;
+    cookMode = { recipe: r, step: -1 };
+    renderCook();
+    openOverlay();
+  }
+
+  function cookNext(){ cookMode.step += 1; renderCook(); }
+  function cookPrev(){ cookMode.step = Math.max(-1, cookMode.step - 1); renderCook(); }
+  function cookReady(){ cookMode.step = 0; renderCook(); }
+
+  function renderCook(){
+    var r = cookMode.recipe, step = cookMode.step;
+
+    if (step === -1){
+      content.innerHTML =
+        '<p class="cook-eyebrow">Ingredients</p>' +
+        '<h2 class="cook-title">' + r.name + '</h2>' +
+        '<p style="font-size:12.5px;color:var(--muted);font-weight:700;margin:-12px 0 18px;">Serves ' + r.servings + '</p>' +
+        '<div class="cook-ing-list">' + r.ingredients.map(function(ing){
+          return '<div class="cook-ing-row">' + svgIcon(ing.icon) +
+            '<span class="n">' + ing.name + (ing.allergen ? '<span class="allergen">' + ing.allergen + '</span>' : '') + '</span>' +
+            '<span class="a">' + ing.qty + '</span></div>';
+        }).join('') + '</div>' +
+        (r.notIncluded ? '<p class="cook-utensils"><b>Not included:</b> ' + r.notIncluded + '</p>' : '') +
+        (r.utensils && r.utensils.length ? '<p class="cook-utensils">You\'ll also need: ' + r.utensils.map(function(u){ return u.label; }).join(', ') + '</p>' : '') +
+        '<button type="button" class="btn primary cook-btn-ready" id="cookReadyBtn">I\'m ready, let\'s cook</button>';
+      document.getElementById('cookReadyBtn').addEventListener('click', cookReady);
+    } else {
+      var total = r.steps.length, isLast = step === total - 1, s = r.steps[step];
+      content.innerHTML =
+        '<div class="cook-dots">' + r.steps.map(function(_, i){ return '<div class="' + (i <= step ? 'done' : '') + '"></div>'; }).join('') + '</div>' +
+        '<p class="cook-eyebrow">Step ' + (step + 1) + ' of ' + total + '</p>' +
+        '<h2 class="cook-title">' + r.name + '</h2>' +
+        '<div class="cook-icons">' + r.ingredients.map(function(i){ return svgIcon(i.icon, 36); }).join('') + '</div>' +
+        '<div class="cook-step-title">' + s.title + '</div>' +
+        '<p class="cook-steptext">' + s.body + '</p>' +
+        (s.callout ? '<p class="cook-callout ' + s.callout.kind + '"><b>' + (s.callout.kind === 'important' ? 'IMPORTANT' : 'TIP') + ':</b> <span>' + s.callout.text + '</span></p>' : '') +
+        '<div class="cook-btnrow">' +
+          '<button type="button" class="btn" id="cookBackBtn">Back</button>' +
+          (isLast ? '<button type="button" class="btn accent grow" id="cookDoneBtn">Done cooking</button>' : '<button type="button" class="btn primary grow" id="cookNextBtn">Next step</button>') +
+        '</div>';
+      document.getElementById('cookBackBtn').addEventListener('click', cookPrev);
+      var nextBtn = document.getElementById('cookNextBtn'); if (nextBtn) nextBtn.addEventListener('click', cookNext);
+      var doneBtn = document.getElementById('cookDoneBtn'); if (doneBtn) doneBtn.addEventListener('click', closeCook);
+    }
+  }
+
+  function openShop(){
+    cookMode = { shop: true };
+    content.innerHTML =
+      '<p class="cook-eyebrow">Shopping</p>' +
+      '<h2 class="cook-title">Combined Shopping List</h2>' +
+      '<p style="font-size:12.5px;color:var(--muted);margin:-12px 0 20px;">All seven recipes, quantities totalled up and shared where possible</p>' +
+      SHOP.map(function(section){
+        return '<div class="shop-cat"><h4>' + section.cat + '</h4>' +
+          (section.note ? '<p class="shop-intro">' + section.note + '</p>' : '') +
+          '<div data-shop-list="' + section.cat + '"></div></div>';
+      }).join('') +
+      '<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;">Tap an item to check it off — saved on this device only.</p>';
+    var STORAGE_KEY = 'slow-cooker-cards-shop-checked';
     var checked = {};
     try{ checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }catch(e){ checked = {}; }
-    el.innerHTML = items.map(function(item){
-      var id = 'sc-' + slugify(item[0]);
-      var isChecked = !!checked[id];
-      return '<div class="shop-row' + (isChecked ? ' checked' : '') + '" data-id="' + id + '">' +
-        '<input type="checkbox" class="shop-check" id="' + id + '"' + (isChecked ? ' checked' : '') + '>' +
-        '<label class="shop-label" for="' + id + '">' + item[0] + ' <span style="color:var(--muted);font-weight:400;">— ' + item[1] + '</span></label>' +
+    function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+    SHOP.forEach(function(section){
+      var el = content.querySelector('[data-shop-list="' + section.cat + '"]');
+      el.innerHTML = section.items.map(function(item){
+        var id = 'sc-' + slugify(item[0]);
+        var isChecked = !!checked[id];
+        return '<div class="shop-row' + (isChecked ? ' checked' : '') + '">' +
+          '<input type="checkbox" class="shop-check" id="' + id + '"' + (isChecked ? ' checked' : '') + '>' +
+          '<label class="shop-label" for="' + id + '">' + item[0] + ' <span style="color:var(--muted);font-weight:400;">— ' + item[1] + '</span></label>' +
         '</div>';
-    }).join('');
-    el.querySelectorAll('.shop-check').forEach(function(cb){
-      cb.addEventListener('change', function(){
-        var row = cb.closest('.shop-row');
-        row.classList.toggle('checked', cb.checked);
-        try{
-          var state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-          state[cb.id] = cb.checked;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }catch(e){ /* per-viewer convenience only - fine if storage is unavailable */ }
+      }).join('');
+      el.querySelectorAll('.shop-check').forEach(function(cb){
+        cb.addEventListener('change', function(){
+          cb.closest('.shop-row').classList.toggle('checked', cb.checked);
+          try{
+            var state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            state[cb.id] = cb.checked;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          }catch(e){ /* per-viewer convenience only */ }
+        });
       });
     });
   }
 
-  render('shop-meat', MEAT);
-  render('shop-fridge', FRIDGE);
-  render('shop-veg', VEG);
-  render('shop-cupboard', CUPBOARD);
+  document.getElementById('shop-open-btn').addEventListener('click', function(){ openShop(); openOverlay(); });
+  document.getElementById('cookCloseBtn').addEventListener('click', closeCook);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeCook(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeCook(); });
+
+  (function(){
+    var sx = null, sy = null;
+    var modal = document.querySelector('.cook-modal');
+    modal.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+    modal.addEventListener('touchend', function(e){
+      if (sx === null || !cookMode || cookMode.shop) { sx = null; sy = null; return; }
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
+        var fwd = document.getElementById('cookNextBtn') || document.getElementById('cookDoneBtn') || document.getElementById('cookReadyBtn');
+        var back = document.getElementById('cookBackBtn');
+        if (dx < 0 && fwd) fwd.click();
+        else if (dx > 0 && back) back.click();
+      }
+      sx = null; sy = null;
+    }, {passive:true});
+  })();
+
+  renderCards();
 })();
 </script>
 </body>
