@@ -634,10 +634,10 @@ var SHOP = [
       '<p class="cook-eyebrow">Shopping</p>' +
       '<h2 class="cook-title">Combined Shopping List</h2>' +
       '<p style="font-size:12.5px;color:var(--muted);margin:-12px 0 20px;">All seven recipes, quantities totalled up and shared where possible</p>' +
-      SHOP.map(function(section){
+      SHOP.map(function(section, idx){
         return '<div class="shop-cat"><h4>' + section.cat + '</h4>' +
           (section.note ? '<p class="shop-intro">' + section.note + '</p>' : '') +
-          '<div data-shop-list="' + section.cat + '"></div></div>';
+          '<div data-shop-list="' + idx + '"></div></div>';
       }).join('') +
       '<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;">Tap an item to check it off — saved on this device only.</p>';
     var STORAGE_KEY = 'slow-cooker-cards-shop-checked';
@@ -645,8 +645,8 @@ var SHOP = [
     try{ checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }catch(e){ checked = {}; }
     function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 
-    function renderSection(section){
-      var el = content.querySelector('[data-shop-list="' + section.cat + '"]');
+    function renderSection(section, idx){
+      var el = content.querySelector('[data-shop-list="' + idx + '"]');
       // Unchecked items first (in their original order), checked items sunk to the bottom.
       var items = section.items.slice().sort(function(a, b){
         var aC = !!checked['sc-' + slugify(a[0])], bC = !!checked['sc-' + slugify(b[0])];
@@ -664,7 +664,7 @@ var SHOP = [
         cb.addEventListener('change', function(){
           checked[cb.id] = cb.checked;
           try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); }catch(e){ /* per-viewer convenience only */ }
-          renderSection(section);
+          renderSection(section, idx);
         });
       });
     }
