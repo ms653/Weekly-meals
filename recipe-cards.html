@@ -278,17 +278,17 @@
     <p>Scanned from the cookbook, then tweaked so they draw from the same stock cubes, cheese, oil and squash instead of seven separate shopping trips. Tap "Cook with me" on any recipe — ingredients first, then step through the method one screen at a time.</p>
   </div>
 
-  <div class="section-block">
-    <h3>Dinner</h3>
-    <div class="card-grid" id="card-grid"></div>
-  </div>
-
   <div class="shop-banner">
     <div>
       <h3>Combined Shopping List</h3>
       <p>All seven recipes, quantities totalled up and shared where possible</p>
     </div>
     <button type="button" class="btn" id="shop-open-btn">View list</button>
+  </div>
+
+  <div class="section-block">
+    <h3>Dinner</h3>
+    <div class="card-grid" id="card-grid"></div>
   </div>
 
   <p class="footer-note">Recipes adapted from a slow-cooker cookbook and rejigged for shared shopping · Cook Mode matches Plateful's own recipe flow</p>
@@ -644,9 +644,15 @@ var SHOP = [
     var checked = {};
     try{ checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }catch(e){ checked = {}; }
     function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-    SHOP.forEach(function(section){
+
+    function renderSection(section){
       var el = content.querySelector('[data-shop-list="' + section.cat + '"]');
-      el.innerHTML = section.items.map(function(item){
+      // Unchecked items first (in their original order), checked items sunk to the bottom.
+      var items = section.items.slice().sort(function(a, b){
+        var aC = !!checked['sc-' + slugify(a[0])], bC = !!checked['sc-' + slugify(b[0])];
+        return aC === bC ? 0 : (aC ? 1 : -1);
+      });
+      el.innerHTML = items.map(function(item){
         var id = 'sc-' + slugify(item[0]);
         var isChecked = !!checked[id];
         return '<div class="shop-row' + (isChecked ? ' checked' : '') + '">' +
@@ -656,15 +662,14 @@ var SHOP = [
       }).join('');
       el.querySelectorAll('.shop-check').forEach(function(cb){
         cb.addEventListener('change', function(){
-          cb.closest('.shop-row').classList.toggle('checked', cb.checked);
-          try{
-            var state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            state[cb.id] = cb.checked;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-          }catch(e){ /* per-viewer convenience only */ }
+          checked[cb.id] = cb.checked;
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); }catch(e){ /* per-viewer convenience only */ }
+          renderSection(section);
         });
       });
-    });
+    }
+
+    SHOP.forEach(renderSection);
   }
 
   document.getElementById('shop-open-btn').addEventListener('click', function(){ openShop(); openOverlay(); });
