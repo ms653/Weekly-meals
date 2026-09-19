@@ -37,10 +37,10 @@ Everything editable lives near the top of the `<script>` tag in `index.html`:
 
 ## Adding recipes without editing code
 
-Two ways, both in the Meal Bank tab, neither needs GitHub or touching `index.html`:
+Two ways, both starting from the Meal Bank tab:
 
-- **"+ Add a recipe"** opens a form (name, dinner/breakfast, shared-prep tags, ingredients, steps). Optionally attach a photo first — it runs OCR right there in the browser (via [Tesseract.js](https://github.com/naptha/tesseract.js), no server involved) and drops the scanned text into the Ingredients box for you to tidy up and split into Steps. Saves instantly to the shared store, visible to everyone within seconds.
-- **"📷 Send a photo for the weekly review"** is for when you don't want to type anything up at all — snap a cookbook page or a screenshot and send it. It's compressed and queued in the shared store, and a scheduled Claude session reviews the queue once a week: it reads each photo directly (real image understanding, not just OCR text extraction), writes a properly structured recipe into the same shared store, and clears the photo out once it's done. You'll see the new recipe appear in the Meal Bank on the next sync after that runs.
+- **"+ Add a recipe"** — no GitHub, no account. Opens a form (name, dinner/breakfast, shared-prep tags, ingredients, steps). Optionally attach a photo first — it runs OCR right there in the browser (via [Tesseract.js](https://github.com/naptha/tesseract.js), no server involved) and drops the scanned text into the Ingredients box for you to tidy up and split into Steps. Saves instantly to the shared store, visible to everyone within seconds.
+- **"📷 Send a photo for the weekly review"** is for when you don't want to type anything up at all — it opens GitHub's upload page for this repo's `recipe-inbox/` folder. Drop a cookbook photo or screenshot there (needs a free GitHub account, and being added as a collaborator on this repo — a one-time setup, ask whoever set this up). A scheduled Claude session checks that folder once a week: it looks at each photo directly (real image understanding, not just OCR text extraction), commits a properly structured recipe into `weekly-recipes.json`, and removes the photo. The new recipe shows up in the Meal Bank the next time the page loads after that runs.
 
 Recipes added either way show up in the Meal Bank grid and in prep clusters just like the built-in ones, marked "· added" so you can tell them apart. Assigning one to a specific day in a specific week is still a code change in `weeks` (see below) — this only covers getting the recipe itself into the bank.
 
@@ -55,33 +55,34 @@ The week picker at the top of the page updates itself from whatever numbers exis
 
 ## Shopping list syncing
 
-The shopping list (items + ticks) syncs across every device automatically, via a small free key/value store at [kvdb.io](https://kvdb.io) — no accounts, no backend to run. The page checks for changes every 8 seconds while the Shopping List tab is open, and immediately whenever you switch to that tab or bring the page back into focus. Custom recipes (see above) use the same store and the same sync pattern, on the Meal Bank tab.
+The shopping list (items + ticks) syncs across every device automatically, via a small free key/value store at [kvdb.io](https://kvdb.io) — no accounts, no backend to run. The page checks for changes every 8 seconds while the Shopping List tab is open, and immediately whenever you switch to that tab or bring the page back into focus. Recipes added via the "+ Add a recipe" form (see above) use the same store and the same sync pattern, on the Meal Bank tab.
 
 The bucket ID is the `KVDB_BUCKET` constant near the top of the `<script>` tag in `index.html`. Keys currently in use in that bucket:
 
 | Key | What it holds |
 |---|---|
 | `shopping-week-<n>` | That week's shopping list (items + ticks) |
-| `recipes-custom` | Every recipe added via the form or the weekly review, keyed by id |
-| `inbox-index` | List of photo ids waiting for the weekly review |
-| `inbox-photo-<id>` | One compressed, base64-encoded photo waiting to be reviewed |
+| `recipes-custom` | Recipes added via the "+ Add a recipe" form, keyed by id |
 
 A few things worth knowing:
 
-- There's no login on this — anyone who has the bucket ID (i.e. anyone who can read this repo's `index.html`) can read or write any of it. Fine for a household meal planner, not something to reuse for sensitive data.
+- There's no login on this — anyone who has the bucket ID (i.e. anyone who can read this repo's `index.html`) can read or write either of these. Fine for a household meal planner, not something to reuse for sensitive data.
 - If the network is unreachable, the page falls back to the last-synced copy cached in that device's local storage (read-only until it's back online) — see the `sync-note` text under the shopping list for the current status ("Synced" / "Syncing…" / "Offline — showing your last saved copy").
 - It's last-write-wins: if two people edit at the same moment, the later save overwrites the earlier one wholesale. Not an issue at the scale of a household list, but worth knowing.
-- If kvdb.io ever needs to be swapped for something else (it disappears, gets slow, etc.), everything sync-related lives behind `fetchShared`/`saveShared`/`deleteShared` in `index.html` — swap those three functions for a different backend and the rest of the app doesn't change.
+- If kvdb.io ever needs to be swapped for something else (it disappears, gets slow, etc.), everything sync-related lives behind `fetchShared`/`saveShared` in `index.html` — swap those two functions for a different backend and the rest of the app doesn't change.
 
 ## The weekly recipe review
 
-A Claude Code scheduled trigger fires once a week, and:
+Recipes from photos deliberately **don't** go through kvdb.io — the scheduled Claude session that reviews them runs in an environment whose network access is locked to GitHub (plus a couple of package registries), so it can't reach a third-party keystore at all. Everything for this feature routes through the repo instead:
 
-1. Reads `inbox-index` from the shared store — if it's empty, it does nothing.
-2. For each queued photo, downloads it, looks at it directly (not OCR — genuine image understanding), and writes a structured recipe (name, dinner/breakfast, ingredients, steps, and a best guess at shared-prep tags) into `recipes-custom`, prefixed `custom-` so it can never collide with or overwrite a built-in recipe.
-3. Deletes the processed photo from the store and clears it out of `inbox-index`.
+1. A photo lands in `recipe-inbox/` (uploaded via GitHub's web UI — see above).
+2. Once a week, a Claude Code scheduled trigger fires, checks that folder — if it's empty, it does nothing.
+3. For each photo, it looks at it directly (not OCR — genuine image understanding) and writes a structured recipe (name, dinner/breakfast, ingredients, steps, and a best guess at shared-prep tags) into `weekly-recipes.json` at the repo root, under an id prefixed `reviewed-` so it can never collide with a built-in recipe or one added through the form.
+4. It deletes the processed photo and pushes everything as one commit directly to `main`.
 
-It only ever talks to the shared store over HTTPS — it doesn't need a repo checkout, and it never commits to this repo. If it's ever misbehaving or you want to pause it, ask Claude to disable or delete the trigger; nothing about the rest of the app depends on it running.
+`index.html` fetches `weekly-recipes.json` (a same-origin request, since it's served right alongside the page) on load and merges it in with the built-ins and the kvdb-backed custom recipes — see `allRecipes()`.
+
+If it's ever misbehaving or you want to pause it, ask Claude to disable or delete the trigger; nothing about the rest of the app depends on it running. If you ever want to review a photo yourself without waiting for the schedule, just add the recipe to `weekly-recipes.json` (or use the "+ Add a recipe" form) and delete the photo from `recipe-inbox/`.
 
 ## Notes
 

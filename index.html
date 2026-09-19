@@ -100,7 +100,7 @@
   .bank-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(190px,1fr));gap:12px;margin-top:20px;}
 
   .bank-actions{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px,1fr));gap:12px;margin-bottom:24px;}
-  .action-tile{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s ease, transform .15s ease;}
+  .action-tile{display:block;background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:16px;cursor:pointer;text-decoration:none;color:inherit;transition:border-color .15s ease, transform .15s ease;}
   .action-tile:hover{border-color:var(--rust);transform:translateY(-1px);}
   .action-tile-title{font-family:'Fraunces', serif;font-weight:600;font-size:16px;margin-bottom:4px;}
   .action-tile-sub{font-size:13px;color:var(--ink-soft);line-height:1.4;}
@@ -197,12 +197,11 @@
         <div class="action-tile-title">+ Add a recipe</div>
         <div class="action-tile-sub">Type it in, or attach a photo and let it scan the text in for you</div>
       </div>
-      <div class="action-tile" id="send-photo-btn">
+      <a class="action-tile" id="send-photo-btn" href="https://github.com/ms653/weekly-meals/upload/main/recipe-inbox" target="_blank" rel="noopener">
         <div class="action-tile-title">📷 Send a photo for the weekly review</div>
-        <div class="action-tile-sub">Too busy to type it up? Send a cookbook photo or screenshot — Claude checks these once a week and adds the recipe for you</div>
-      </div>
+        <div class="action-tile-sub">Too busy to type it up? Upload a cookbook photo or screenshot here (needs a free GitHub account) — Claude checks this folder weekly and adds the recipe for you</div>
+      </a>
     </div>
-    <input type="file" id="photo-inbox-input" accept="image/*" style="display:none">
     <div id="clusters"></div>
     <div class="section-label">All meals</div>
     <div class="bank-grid" id="bank-grid"></div>
@@ -358,14 +357,17 @@ const shoppingLists = {
 
 /* =========================================================================
    SHARED STORAGE
-   Everything live (shopping list ticks/additions, custom recipes, and the
-   photo inbox for the weekly review) is kept in a small free key/value
-   store at kvdb.io so every device sees the same data, instead of each
-   browser's own local storage. There's no login on this — anyone with the
-   bucket URL below can read/write it, which is a fine trade for a
-   household meal planner. Local storage is still used as a same-device
-   cache so the page has something to show immediately and still works
-   (read-only, from the last sync) if the network is down.
+   The shopping list (ticks/additions) and recipes added via the "+ Add a
+   recipe" form are kept in a small free key/value store at kvdb.io so every
+   device sees the same data instantly, instead of each browser's own local
+   storage. There's no login on this — anyone with the bucket URL below can
+   read/write it, which is a fine trade for a household meal planner. Local
+   storage is still used as a same-device cache so the page has something to
+   show immediately and still works (read-only, from the last sync) if the
+   network is down.
+
+   Recipes from the weekly photo review are NOT in here - see
+   loadWeeklyRecipes() below and the README for why.
    ========================================================================= */
 const KVDB_BUCKET = '6ce9CfkYV8RHp5PnGG4MeT';
 function kvdbUrl(key){ return `https://kvdb.io/${KVDB_BUCKET}/${key}`; }
@@ -381,10 +383,6 @@ async function fetchShared(key){
 async function saveShared(key, data){
   const res = await fetch(kvdbUrl(key), { method:'PUT', body: JSON.stringify(data) });
   if(!res.ok) throw new Error('save failed: ' + res.status);
-}
-
-async function deleteShared(key){
-  try{ await fetch(kvdbUrl(key), { method:'DELETE' }); }catch(e){ /* best effort - see photo inbox notes */ }
 }
 
 function escapeHtml(str){
@@ -479,7 +477,22 @@ function startSyncPolling(){
 const CUSTOM_RECIPES_KEY = 'recipes-custom';
 const CUSTOM_RECIPES_CACHE_KEY = 'meal-planner-custom-recipes';
 
-function allRecipes(){ return Object.assign({}, mealBank, customRecipes); }
+// Recipes from the "+ Add a recipe" form (kvdb, live-synced) merge over the
+// built-ins. Recipes from the weekly photo review (git-committed to
+// weekly-recipes.json alongside this file) merge in too - see README for why
+// that one isn't kvdb-backed like everything else.
+let weeklyRecipes = {};
+
+async function loadWeeklyRecipes(){
+  try{
+    const res = await fetch('./weekly-recipes.json', { cache:'no-store' });
+    weeklyRecipes = res.ok ? await res.json() : {};
+  }catch(e){
+    weeklyRecipes = {};
+  }
+}
+
+function allRecipes(){ return Object.assign({}, mealBank, weeklyRecipes, customRecipes); }
 
 function cacheRecipesLocally(){
   try{ localStorage.setItem(CUSTOM_RECIPES_CACHE_KEY, JSON.stringify(customRecipes)); }catch(e){ /* storage unavailable */ }
@@ -829,62 +842,11 @@ function saveNewRecipe(){
   renderBank();
 }
 
-/* ---------------- SEND A PHOTO FOR THE WEEKLY REVIEW ---------------- */
-document.getElementById('send-photo-btn').addEventListener('click', ()=>{
-  document.getElementById('photo-inbox-input').click();
-});
-
-document.getElementById('photo-inbox-input').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  e.target.value = '';
-  if(!file) return;
-  const subEl = document.querySelector('#send-photo-btn .action-tile-sub');
-  const original = subEl.textContent;
-  subEl.textContent = 'Sending…';
-  try{
-    await sendPhotoForReview(file);
-    subEl.textContent = 'Sent — Claude reviews these weekly and adds the recipe for you.';
-  }catch(err){
-    subEl.textContent = "Couldn't send that photo — check your connection and try again.";
-  }
-  setTimeout(()=>{ subEl.textContent = original; }, 6000);
-});
-
-function downscaleImage(file, maxWidth){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function sendPhotoForReview(file){
-  const dataUrl = await downscaleImage(file, 1000);
-  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
-  await saveShared('inbox-photo-' + id, dataUrl);
-  const index = (await fetchShared('inbox-index')) || [];
-  index.push({ id, addedAt: new Date().toISOString() });
-  await saveShared('inbox-index', index);
-}
-
 /* ---------------- INIT ---------------- */
 renderWeekPicker();
 renderPlan();
 loadList().then(renderShopList);
-loadRecipes().then(renderBank);
+Promise.all([loadWeeklyRecipes(), loadRecipes()]).then(renderBank);
 startSyncPolling();
 startRecipeSyncPolling();
 </script>
