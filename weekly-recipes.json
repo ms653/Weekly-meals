@@ -108,5 +108,82 @@
       "Serve piled into bowls with a flatbread tucked into the side of each dish."
     ],
     "custom": true
+  },
+  "reviewed-chicken-kyiv-pasta": {
+    "name": "Chicken Kyiv Pasta",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "600g (1lb 5oz) boneless, skinless chicken thighs",
+      "1 large courgette (zucchini), finely grated",
+      "3 garlic cloves, puréed or grated",
+      "25g (1½ tbsp) unsalted butter",
+      "1 low-salt chicken stock cube",
+      "150g (¾ cup) cream cheese",
+      "150ml (⅔ cup) milk",
+      "250g (9oz) pasta",
+      "50g (1¾oz) grated Cheddar (optional)",
+      "freshly ground black pepper"
+    ],
+    "steps": [
+      "Add the chicken thighs, grated courgette, garlic, a good grinding of black pepper, and the butter to the slow cooker pot.",
+      "Boil the kettle and dissolve the stock cube in 550ml (2½ cups) of water, then add this to the chicken too. Stir really well so the chicken is unravelled and submerged under the stock. Put the lid on and cook on HIGH for 3 hours, or LOW for 6 hours.",
+      "Once the chicken is soft and tender, in a separate bowl mix the cream cheese and milk until well combined, then pour into the slow cooker along with the uncooked pasta. Stir really well, slightly squashing each piece of chicken with the wooden spoon to help it break up.",
+      "Put the lid back on and cook for 40 minutes on HIGH or 1 hour on LOW. Once done, stir really well, then put the lid on to stand for 5 minutes before stirring again and serving.",
+      "For an even creamier, cheesier texture, stir in the grated Cheddar once everything is cooked, then let it stand for 5 minutes so it melts into the sauce."
+    ],
+    "custom": true
+  },
+  "reviewed-creamy-butternut-squash-pasta": {
+    "name": "Creamy Butternut Squash Pasta",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "1 large butternut squash, peeled, deseeded and roughly chopped (approx. 800g-1kg/1lb 12oz-2lb 4oz chopped weight)",
+      "1 onion, roughly chopped",
+      "3 large garlic cloves, roughly chopped",
+      "1 low-salt chicken or vegetable stock cube",
+      "220g (7¾oz) dried pasta of your choice",
+      "200ml (scant 1 cup) milk",
+      "100g (½ cup) cream cheese",
+      "90g (3¼oz) smoked Cheddar cheese, grated",
+      "2 tsp smoked paprika",
+      "freshly ground black pepper"
+    ],
+    "steps": [
+      "Boil the kettle.",
+      "Add the chopped butternut squash, onion and garlic to the slow cooker with a generous grinding of black pepper. Crumble in the stock cube, then add 500ml (generous 2 cups) of boiling water. Stir to dissolve the stock cube, then put the lid on and cook for 3 hours on HIGH or 5-6 hours on LOW until the veg is very tender.",
+      "Blend the veg and cooking liquid to a very smooth purée (a stick blender or food processor both work), then pour it back into the slow cooker.",
+      "Add the uncooked pasta, milk, cream cheese, grated smoked cheese and smoked paprika to the purée and stir well. Put the lid back on and cook for a further 30-40 minutes on LOW, or until the pasta is cooked.",
+      "Serve as is - adults can add a touch of salt and pepper. Also great the next day as a pasta bake: pour into an oven dish with a splash more milk, top with extra cheese, and bake at 200°C fan (220°C/425°F/Gas 7) for around 20 minutes until crisp and golden."
+    ],
+    "custom": true
+  },
+  "reviewed-chickpea-and-butternut-squash-dahl": {
+    "name": "Chickpea and Butternut Squash Dahl",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "1 butternut squash, peeled and cut into 2cm (¾in) dice",
+      "1 x 400g (14oz) can of chickpeas in water",
+      "300g (1⅔ cups) dried red lentils, rinsed",
+      "2 low-salt vegetable stock cubes",
+      "1 tbsp garam masala",
+      "1 tbsp mild curry powder",
+      "a good grinding of black pepper",
+      "2 heaped tsp dried mixed herbs",
+      "2 tsp smoked paprika",
+      "1 x 400g (14oz) can of coconut milk",
+      "1 x 400g (14oz) can of chopped tomatoes",
+      "1 brown onion, finely diced",
+      "2 garlic cloves, grated"
+    ],
+    "steps": [
+      "Put all of the ingredients, including the water from the can of chickpeas, into the slow cooker pot, along with 350ml (1½ cups) of boiling water.",
+      "Give it a really good stir and pop the lid on. Cook for 3-4 hours on HIGH or 6-8 hours on LOW.",
+      "Once done, use a wooden spoon or rubber spatula to give the dahl a really good stir and mash the soft butternut squash into the sauce a little.",
+      "Serve with rice or naan breads, or use as a pasta sauce. Adults may want to season their portion with a little salt or a dash of chilli sauce."
+    ],
+    "custom": true
   }
 }
