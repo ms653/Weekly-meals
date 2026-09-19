@@ -1,1 +1,112 @@
-{}
+{
+  "reviewed-spanish-chicken-and-sweetcorn-stew": {
+    "name": "Spanish Chicken and Sweetcorn Stew",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "1 x 400g (14oz) can of cannellini or haricot beans in water",
+      "500g (1lb 2oz) boneless chicken thighs",
+      "300g (10½oz) frozen sweetcorn kernels",
+      "500g (1lb 2oz) passata (strained tomatoes)",
+      "3 tsp smoked paprika",
+      "1 low-salt chicken stock cube",
+      "2 large garlic cloves, crushed",
+      "good grinding of black pepper"
+    ],
+    "steps": [
+      "Rinse the beans, mash with a potato masher until none are left whole, and add to the slow cooker pot with the rest of the ingredients.",
+      "Half-fill the empty passata container with cold water, swilling out any left in the corners, and add that too.",
+      "Stir well, flattening out the chicken, then put the lid on and cook on HIGH for 3 hours or LOW for 5-6 hours until the chicken is very tender.",
+      "Serve as is, or with potatoes, pasta or rice, or soft flatbreads for dunking. Garnish with chopped herbs if you like."
+    ],
+    "custom": true
+  },
+  "reviewed-proper-beef-stew-and-dumplings": {
+    "name": "Proper Beef Stew and Dumplings",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "5 celery sticks",
+      "1 medium brown onion",
+      "3 small carrots",
+      "2 tbsp sunflower oil",
+      "750g (1lb 10oz) lean diced stewing beef",
+      "2 tbsp plain (all-purpose) flour",
+      "2 large potatoes",
+      "1 tbsp Worcestershire sauce (optional)",
+      "2 fresh or dried bay leaves",
+      "3 garlic cloves, minced",
+      "1 tsp dried mixed herbs",
+      "2 low-salt beef stock cubes",
+      "freshly ground black pepper",
+      "For the dumplings: 200g (1⅓ cups) self-raising flour, plus extra for dusting",
+      "70g (2½oz) beef or vegetarian suet",
+      "50g (1¾oz) Cheddar cheese, finely grated"
+    ],
+    "steps": [
+      "Finely dice the celery, onion and carrots. Cook in a large frying pan with a little oil for about 5 minutes until starting to soften.",
+      "Meanwhile, coat the beef in the flour, shaking off the excess. Peel and quarter the potatoes.",
+      "Transfer the softened veg to the slow cooker. Brown the beef in batches in the same pan over high heat until dark and crispy outside but still raw inside, then transfer to the slow cooker too.",
+      "Add the potatoes and remaining ingredients (bay leaves, garlic, mixed herbs, Worcestershire sauce) plus a generous grind of black pepper. Mix the stock cubes with 800ml (3½ cups) boiling water until dissolved and add that too. Stir well.",
+      "Cook for 6-8 hours on LOW or 4-5 hours on HIGH, until the meat is tender and falls apart with gentle pressure.",
+      "Optional dumplings: 1 hour before serving, mix the dumpling ingredients with a pinch of black pepper and about 160ml (⅔ cup) cold water into a slightly sticky, mouldable dough. Roll into golf-ball-sized dumplings (makes about 10) and drop into the stew.",
+      "Cook uncovered on HIGH until the dumplings have doubled in size - don't lift the lid while they rise."
+    ],
+    "custom": true
+  },
+  "reviewed-lamb-tagine": {
+    "name": "Lamb Tagine",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "2 tbsp sunflower oil",
+      "750g (1lb 10oz) lamb shoulder, diced, most excess fat removed",
+      "1 large brown onion",
+      "3 large carrots",
+      "2 tsp ground cumin",
+      "2 tsp sweet paprika",
+      "1 x 400g (14oz) can chickpeas in water, drained",
+      "1 x 400g (14oz) can chopped tomatoes",
+      "2 low-salt chicken or beef stock cubes, crumbled",
+      "2 large garlic cloves, crushed",
+      "½ tsp ground cinnamon",
+      "a handful of seedless raisins (optional)",
+      "fresh herbs, to garnish (optional)"
+    ],
+    "steps": [
+      "Heat 1 tbsp of the sunflower oil in a large frying pan over high heat. Fry half the lamb in an even layer for 2 minutes until browned, turn and fry another 1-2 minutes, then transfer to the slow cooker. Repeat with the remaining lamb.",
+      "Meanwhile, grate or finely dice the onion, peel the carrots and cut into chunks. Add these to the slow cooker along with the rest of the ingredients.",
+      "Once all the meat is browned and in the slow cooker, add 400ml (1⅔ cups) boiling water to the empty hot frying pan and stir for 30 seconds to lift the caramelized bits, then pour that flavoured water into the slow cooker.",
+      "Stir well, put the lid on, and cook for 4 hours on HIGH or 6-7 hours on LOW until the meat is super tender.",
+      "Serve in bowls with boiled potatoes and fresh herbs to garnish."
+    ],
+    "custom": true
+  },
+  "reviewed-coconut-potato-curry": {
+    "name": "Coconut Potato Curry",
+    "slot": "dinner",
+    "tags": [],
+    "ingredients": [
+      "1 large onion",
+      "2 large garlic cloves",
+      "2 tbsp garlic-infused olive oil",
+      "2 tbsp tomato purée (paste)",
+      "2 tsp garam masala",
+      "1 heaped tbsp mild curry powder",
+      "1 x 400g (14oz) can coconut milk",
+      "1 low-salt vegetable stock cube",
+      "1kg (2lb 4oz) all-rounder potatoes, like Maris Piper",
+      "4 lumps of frozen spinach (about 200g/7oz)",
+      "3-4 flatbreads, to serve"
+    ],
+    "steps": [
+      "Peel and grate (or finely dice) the onion. Finely grate the garlic. Add both to the slow cooker with the oil and stir. Cook for 10-15 minutes on HIGH.",
+      "Meanwhile, peel the potatoes and dice into bite-sized (about 3cm/1¼in) chunks.",
+      "Add the tomato purée, garam masala and curry powder to the slow cooker and stir. Cook for a further 10 minutes.",
+      "Once aromatic and the onion has started to cook, add the coconut milk and potatoes. Fill the empty coconut milk can with boiling water, crumble in the stock cube, and add to the slow cooker. Stir, and cook for 3 hours on HIGH or 5 hours on LOW.",
+      "After that time, add the frozen spinach and cook for a further 30 minutes on HIGH or 1 hour on LOW.",
+      "Serve piled into bowls with a flatbread tucked into the side of each dish."
+    ],
+    "custom": true
+  }
+}
